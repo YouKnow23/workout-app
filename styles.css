@@ -233,7 +233,7 @@ body {
 
 .exercise-table th,
 .exercise-table td {
-    padding: 12px 8px;
+    
     text-align: center;
     border-bottom: 1px solid #e0e0e0;
 }
@@ -471,3 +471,4 @@ body {
     }
 
 }
+
