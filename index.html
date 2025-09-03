@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4F46E5">
+
+<!-- iOS specific meta tags -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Workout">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- Viewport for mobile -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;
+    if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9796c12d719dcc74',t:'MTc1NjkxODMxNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="msapplication-tap-highlight" content="no">
+
+<!-- Status bar styling -->
+<meta name="theme-color" content="#667eea">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');
+    d.innerHTML="window.__CF$cv$params={r:'97906a6cd56b8b47',t:'MTc1Njg1MTg0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+    b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);
+    if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Workout App</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Workout Journal</h1>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="mainMenu" class="page">
+            <div class="page-nav">
+                <button class="btn btn-primary" onclick="showCreateTemplate()">
+                    ➕ Create Template
+                </button>
+            </div>
+
+            <div id="templateGrid" class="template-grid">
+                <!-- Templates will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Create Template Page -->
+        <div id="createTemplate" class="page hidden">
+            <div class="page-nav">
+                <button class="btn" onclick="showMainMenu()">
+                    ← Back
+                </button>
+                <button class="btn btn-primary" onclick="saveTemplate()">
+                    💾 Save Template
+                </button>
+            </div>
+
+            <div class="template-form">
+                <div class="form-group">
+                    <label for="templateName">Template Name</label>
+                    <input type="text" id="templateName" class="form-input" placeholder="Enter template name...">
+                </div>
+            </div>
+
+            <div id="exerciseContainer">
+                <!-- Exercise blocks will be added here -->
+            </div>
+
+            <button class="btn btn-secondary" onclick="addExercise()">
+                ➕ Add Exercise
+            </button>
+        </div>
+
+        <!-- Workout Session Page -->
+        <div id="workoutSession" class="page hidden">
+            <div class="page-nav">
+                <button class="btn" onclick="showMainMenu()">
+                    ← Back
+                </button>
+                <button class="btn btn-primary" onclick="finishWorkout()">
+                    ✅ Finish Workout
+                </button>
+            </div>
+
+            <div id="workoutContainer">
+                <!-- Workout exercises will be loaded here -->
+            </div>
+
+            <div class="workout-timer" id="workoutTimer">
+                <div class="workout-date" id="workoutDate"></div>
+                <div class="workout-time">00:00</div>
+            </div>
+        </div>
+
+        <!-- Workout History Page -->
+        <div id="workoutHistory" class="page hidden">
+            <div class="page-nav">
+                <button class="btn" onclick="showMainMenu()">
+                    ← Back
+                </button>
+            </div>
+
+            <div id="historyContainer">
+                <!-- Workout history will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="bottom-nav-btn active" id="homeBtn" onclick="showMainMenu()">
+            <div class="bottom-nav-icon">🏠</div>
+            <div>Home</div>
+        </button>
+        <button class="bottom-nav-btn" id="historyBtn" onclick="showWorkoutHistory()">
+            <div class="bottom-nav-icon">📊</div>
+            <div>History</div>
+        </button>
+    </div>
+
+    <!-- Modals -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <p id="confirmMessage">Are you sure?</p>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="confirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'978ef0ef50d38b47',t:'MTc1NjgzNjM4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
