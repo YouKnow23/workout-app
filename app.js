@@ -101,44 +101,47 @@ function createTemplateCard(template) {
     
     card.innerHTML =
     
-    `
+    card.innerHTML = `
+    <div class="template-card-header">
+        <div class="drag-handle">≡</div>
         <h3>${template.name}</h3>
-        <div class="template-preview">
-            ${exerciseCount} exercises • ${totalSets} sets
-        </div>
-        <div class="template-actions">
-            <button class="btn btn-primary btn-small" onclick="startWorkout('${template.name}')">
-                ▶️ Start
-            </button>
-           
-            <button class="btn btn-danger btn-small" onclick="deleteTemplate('${template.name}')">
-                🗑️ Delete
-            </button>
-        </div>
-    `;
+    </div>
+    <div class="template-preview">
+        ${exerciseCount} exercises • ${totalSets} sets
+    </div>
+    <div class="template-actions">
+        <button class="btn btn-primary btn-small" onclick="startWorkout('${template.name}')">▶️ Start</button>
+        <button class="btn btn-danger btn-small" onclick="deleteTemplate('${template.name}')">🗑️ Delete</button>
+    </div>
+`;
 
     let pressTimer;
-
     card.addEventListener('touchstart', () => {
         pressTimer = setTimeout(() => {
-            showTemplatePreview(template.name);
-        }, 600); // 600ms hold
+            showTemplatePreview(template.name, true); // pass a flag for auto-close
+        }, 600);
     });
 
     card.addEventListener('touchend', () => {
         clearTimeout(pressTimer);
+        if (document.getElementById('previewModal').style.display === 'flex') {
+            closePreviewModal();
+            showMainMenu(); // return to previous screen
+        }
     });
 
     card.addEventListener('touchmove', () => {
         clearTimeout(pressTimer);
     });
-
-    card.draggable = true;
-    card.addEventListener('dragstart', (e) => {
-    e.dataTransfer.setData('text/plain', template.name);
+     // ⬇️ Your drag handle code goes here
+    const handle = card.querySelector('.drag-handle');
+    handle.draggable = true;
+    handle.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', template.name);
     });
-    
+
     return card;
+
 }
 
 function getStoredTemplates() {
@@ -163,7 +166,7 @@ function showTemplateFolders() {
     loadFolders();
 }
 
-function showTemplatePreview(templateName) {
+function showTemplatePreview(templateName, autoClose = false) {
     const templateData = localStorage.getItem(`template_${templateName}`);
     if (!templateData) return;
 
@@ -182,6 +185,9 @@ function showTemplatePreview(templateName) {
     document.getElementById('previewTitle').textContent = `📋 ${templateName}`;
     document.getElementById('previewContent').innerHTML = html;
     document.getElementById('previewModal').style.display = 'flex';
+    if (autoClose) {
+        setTimeout(closePreviewModal, 2000);
+    }
 }
 
 function closePreviewModal() {
