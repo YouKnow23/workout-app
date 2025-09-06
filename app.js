@@ -108,9 +108,7 @@ function createTemplateCard(template) {
             <button class="btn btn-primary btn-small" onclick="startWorkout('${template.name}')">
                 ▶️ Start
             </button>
-            <button class="btn btn-small" onclick="editTemplate('${template.name}')">
-                ✏️ Edit
-            </button>
+           
             <button class="btn btn-danger btn-small" onclick="deleteTemplate('${template.name}')">
                 🗑️ Delete
             </button>
@@ -235,10 +233,10 @@ function createSetRow(exerciseId, setIndex, data = {}) {
         </td>
         <td>-</td>
         <td>
-            <input type="number" class="set-input" placeholder="0" value="${weight}" step="0.5" readonly style="background: #f5f5f5; cursor: not-allowed;">
+            <input type="number" class="set-input" placeholder="0" value="${weight}" step="0.5" >
         </td>
         <td>
-            <input type="number" class="set-input" placeholder="0" value="${reps}" readonly style="background: #f5f5f5; cursor: not-allowed;">
+            <input type="number" class="set-input" placeholder="0" value="${reps}" >
         </td>
         <td>
             <button class="remove-btn" onclick="removeSet(${exerciseId}, ${setIndex})">
@@ -693,9 +691,7 @@ function createWorkoutHistoryCard(workout) {
         </div>
         
         <div class="template-actions">
-            <button class="btn btn-primary btn-small" onclick="editWorkout('${workout.id}')">
-                ✏️ Edit
-            </button>
+            
             <button class="btn btn-danger btn-small" onclick="deleteWorkout('${workout.id}')">
                 🗑️ Delete
             </button>
