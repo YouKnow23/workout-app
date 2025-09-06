@@ -99,7 +99,9 @@ function createTemplateCard(template) {
     const exerciseCount = template.exercises.length;
     const totalSets = template.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
     
-    card.innerHTML = `
+    card.innerHTML =
+    
+    `
         <h3>${template.name}</h3>
         <div class="template-preview">
             ${exerciseCount} exercises • ${totalSets} sets
@@ -114,6 +116,27 @@ function createTemplateCard(template) {
             </button>
         </div>
     `;
+
+    let pressTimer;
+
+    card.addEventListener('touchstart', () => {
+        pressTimer = setTimeout(() => {
+            showTemplatePreview(template.name);
+        }, 600); // 600ms hold
+    });
+
+    card.addEventListener('touchend', () => {
+        clearTimeout(pressTimer);
+    });
+
+    card.addEventListener('touchmove', () => {
+        clearTimeout(pressTimer);
+    });
+
+    card.draggable = true;
+    card.addEventListener('dragstart', (e) => {
+    e.dataTransfer.setData('text/plain', template.name);
+    });
     
     return card;
 }
@@ -130,6 +153,89 @@ function getStoredTemplates() {
     }
     return templates.sort((a, b) => a.name.localeCompare(b.name));
 }
+
+function showTemplateFolders() {
+    const folderName = prompt("Enter folder name:");
+    if (!folderName) return;
+
+    // Save empty folder in localStorage
+    localStorage.setItem(`folder_${folderName}`, JSON.stringify([]));
+    loadFolders();
+}
+
+function showTemplatePreview(templateName) {
+    const templateData = localStorage.getItem(`template_${templateName}`);
+    if (!templateData) return;
+
+    const exercises = JSON.parse(templateData);
+
+    // Build preview HTML
+    let html = `<p><strong>${exercises.length}</strong> exercises</p>`;
+    html += exercises.map(ex => {
+        const sets = ex.sets.map(s => {
+            const setDisplay = s.type !== 'normal' ? getSetTypeDisplay(s.type) : s.set;
+            return `${setDisplay}: ${s.weight || '-'} × ${s.reps || '-'}`;
+        }).join('<br>');
+        return `<div style="margin-bottom:12px;"><strong>${ex.name}</strong><br>${sets}</div>`;
+    }).join('');
+
+    document.getElementById('previewTitle').textContent = `📋 ${templateName}`;
+    document.getElementById('previewContent').innerHTML = html;
+    document.getElementById('previewModal').style.display = 'flex';
+}
+
+function closePreviewModal() {
+    document.getElementById('previewModal').style.display = 'none';
+}
+
+
+function loadFolders() {
+    const grid = document.getElementById('folderGrid');
+    grid.innerHTML = '';
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('folder_')) {
+            const name = key.replace('folder_', '');
+            const folderCard = createFolderCard(name);
+            grid.appendChild(folderCard);
+        }
+    }
+}
+
+function createFolderCard(name) {
+    const card = document.createElement('div');
+    card.className = 'template-card folder-card';
+    card.innerHTML = `
+        <h3>📁 ${name}</h3>
+        <div class="folder-dropzone">Drag templates here</div>
+    `;
+
+    // Allow drop
+    card.querySelector('.folder-dropzone').addEventListener('dragover', (e) => e.preventDefault());
+    card.querySelector('.folder-dropzone').addEventListener('drop', (e) => {
+        e.preventDefault();
+        const templateName = e.dataTransfer.getData('text/plain');
+        moveTemplateToFolder(templateName, name);
+    });
+
+    return card;
+}
+
+function moveTemplateToFolder(templateName, folderName) {
+    const folderKey = `folder_${folderName}`;
+    const folder = JSON.parse(localStorage.getItem(folderKey)) || [];
+    folder.push(templateName);
+
+    // Remove template from main list
+    localStorage.removeItem(`template_${templateName}`);
+    localStorage.setItem(folderKey, JSON.stringify(folder));
+
+    showNotification(`Moved "${templateName}" to ${folderName}`);
+    loadTemplates();
+    loadFolders();
+}
+
 
 function startWorkout(templateName) {
     showConfirmModal(
