@@ -634,5 +634,31 @@ body {
     text-align: left;
 }
 
+.folder-card {
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.folder-card.swiped {
+  transform: translateX(-80px);
+}
+
+.delete-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  background: #f44336;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.template-card,
+.template-card * {
+  -webkit-tap-highlight-color: transparent;
+}
+
 
 }
