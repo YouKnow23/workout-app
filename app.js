@@ -135,11 +135,10 @@ function createTemplateCard(template) {
     });
      // ⬇️ Your drag handle code goes here
     const handle = card.querySelector('.drag-handle');
-    handle.draggable = true;
-    handle.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', template.name);
-    });
-
+card.draggable = true;
+handle.addEventListener('mousedown', () => {
+    card.dispatchEvent(new DragEvent('dragstart', { bubbles: true }));
+});
     return card;
 
 }
@@ -210,6 +209,11 @@ function loadFolders() {
 }
 
 function createFolderCard(name) {
+    const folders = JSON.parse(localStorage.getItem('folders') || '[]');
+    folders.push({ name });
+    localStorage.setItem('folders', JSON.stringify(folders));
+    renderFolders();
+
     const card = document.createElement('div');
     card.className = 'template-card folder-card';
     card.innerHTML = `
@@ -228,6 +232,15 @@ function createFolderCard(name) {
     return card;
 }
 
+function renderFolders() {
+    const container = document.getElementById('savedTemplatesSection');
+    container.innerHTML = ''; // clear
+    const folders = JSON.parse(localStorage.getItem('folders') || '[]');
+    folders.forEach(folder => {
+        container.appendChild(createFolderCard(folder));
+    });
+}
+
 function moveTemplateToFolder(templateName, folderName) {
     const folderKey = `folder_${folderName}`;
     const folder = JSON.parse(localStorage.getItem(folderKey)) || [];
@@ -240,6 +253,18 @@ function moveTemplateToFolder(templateName, folderName) {
     showNotification(`Moved "${templateName}" to ${folderName}`);
     loadTemplates();
     loadFolders();
+}
+
+function enableSwipeToDelete(card, folderName) {
+    let startX = 0;
+    card.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    card.addEventListener('touchmove', e => {
+        const diff = e.touches[0].clientX - startX;
+        if (diff < -30) card.classList.add('swiped');
+    });
+    card.addEventListener('touchend', () => {
+        // tap delete button to remove from localStorage
+    });
 }
 
 
