@@ -6,7 +6,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #fafaf7;
     min-height: 100vh;
     color: #333;
 }
@@ -30,6 +30,7 @@ body {
 .header h2 {    
     margin-bottom: 5px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    color: #2c3e50;
 }
 
 .page-nav {
@@ -158,11 +159,12 @@ body {
 }
 
 .template-form {
-    background: white;
-    border-radius: 10px;
+    background: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #cfd8dc;
     padding: 12px;
     margin-bottom: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: none;
 }
 
 .form-group {
@@ -191,11 +193,12 @@ body {
 }
 
 .exercise-block {
-  background: white;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
   padding: 8px 10px;
   margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -447,6 +450,22 @@ body {
     font-size: 24px;
 }
 
+.folder-card {
+    background: #fdfdfb;
+    border: 2px dashed #c5d3e0;
+    color: #2c3e50;
+    text-align: center;
+}
+
+.folder-dropzone {
+    padding: 15px;
+    font-size: 14px;
+    color: #666;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 10px;
+}
+
+
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
@@ -489,6 +508,8 @@ body {
     .header h1 {
         font-size: 2rem;
         margin-left: 20px;
+        color: #2c3e50; /* darker ink-like text */
+        font-family: 'Georgia', serif; /* handwritten / journal feel */
     }
 
     .form-group {
@@ -506,7 +527,7 @@ body {
     .set-input {
         width: 45px;          /* narrower inputs */
         padding: 4px;
-        font-size: 12px;
+        font-size: 16px;
     }
 
     .modal-content {
@@ -538,12 +559,12 @@ body {
     /* Slim down form inputs */
     .form-input {
         padding: 8px;
-        font-size: 13px;
+        font-size: 16px;
     }
     
     /* Make exercise name input smaller */
     .exercise-name {
-        font-size: 13px;     /* smaller text */
+        font-size: 16px;     /* smaller text */
         padding: 5px ;    /* less padding inside */
         border-radius: 4px;  /* smaller corners */
         flex: 1;             /* still stretch across row */
@@ -581,5 +602,17 @@ body {
         border-radius: 2px;   /* no rounded corners on mobile */
 }
 
+.bottom-nav {
+    padding: 8px 0;
+    height: 10%
+
 }
 
+#previewModal .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: left;
+}
+
+
+}
