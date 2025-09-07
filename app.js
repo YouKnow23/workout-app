@@ -100,7 +100,16 @@ function createTemplateCard(template) {
     const exerciseCount = template.exercises.length;
     const totalSets = template.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
 
-    // simple header, no drag handlebars
+    // Drag handle element (only for dragging)
+    const handle = document.createElement('div');
+    handle.className = 'drag-handle';
+    handle.innerHTML = '≡';
+    handle.draggable = true;
+    handle.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', template.name);
+    });
+
+    // Card inner content
     card.innerHTML = `
         <h3>${template.name}</h3>
         <div class="template-preview">
@@ -112,14 +121,16 @@ function createTemplateCard(template) {
         </div>
     `;
 
-    // 1) Tap to preview (mobile or desktop)
+    // Prepend handle to the card
+    card.prepend(handle);
+
+    // Tap to preview (ignore buttons + handle clicks)
     card.addEventListener('click', (e) => {
-        // ignore clicks on buttons
-        if (e.target.closest('.template-actions')) return;
+        if (e.target.closest('.template-actions') || e.target.classList.contains('drag-handle')) return;
         showTemplatePreview(template.name);
     });
 
-    // 2) Press & hold (mobile) to preview
+    // Press & hold (mobile) to preview
     let pressTimer;
     card.addEventListener('touchstart', () => {
         pressTimer = setTimeout(() => showTemplatePreview(template.name), 500);
@@ -128,14 +139,9 @@ function createTemplateCard(template) {
         card.addEventListener(ev, () => clearTimeout(pressTimer), { passive: true })
     );
 
-    // 3) Make the whole card draggable for folder drop
-    card.draggable = true;
-    card.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', template.name);
-    });
-
     return card;
 }
+
 
 
 function getStoredTemplates() {
@@ -200,6 +206,12 @@ function closePreviewModal() {
     document.getElementById('previewModal').style.display = 'none';
 }
 
+document.getElementById('previewModal').addEventListener('click', (e) => {
+    if (e.target.id === 'previewModal') {
+        closePreviewModal();
+    }
+});
+
 
 function loadFolders() {
     const grid = document.getElementById('folderGrid');
@@ -221,8 +233,11 @@ function createFolderCard(name) {
     card.innerHTML = `
         <h3>📁 ${name}</h3>
         <div class="folder-dropzone">Drag templates here</div>
+        <div class="folder-contents" style="display:none;"></div>
         <div class="delete-btn">Delete</div>
     `;
+
+    const contentsEl = card.querySelector('.folder-contents');
 
     // drag target
     const drop = card.querySelector('.folder-dropzone');
@@ -231,6 +246,17 @@ function createFolderCard(name) {
         e.preventDefault();
         const templateName = e.dataTransfer.getData('text/plain');
         moveTemplateToFolder(templateName, name);
+        showFolderContents(name, contentsEl); // refresh after drop
+    });
+
+    // tap folder to toggle contents
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('.delete-btn')) return; // ignore delete button
+        const isOpen = contentsEl.style.display === 'block';
+        contentsEl.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+            showFolderContents(name, contentsEl);
+        }
     });
 
     // swipe-to-delete
@@ -239,6 +265,47 @@ function createFolderCard(name) {
 
     return card;
 }
+
+function showFolderContents(folderName, container) {
+    const folderKey = `folder_${folderName}`;
+    const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
+
+    if (templates.length === 0) {
+        container.innerHTML = `<p style="color:#666; font-size:14px;">(No templates yet)</p>`;
+        return;
+    }
+
+    container.innerHTML = '';
+    templates.forEach(templateName => {
+        const templateData = localStorage.getItem(`template_${templateName}`);
+        if (!templateData) return;
+
+        const exercises = JSON.parse(templateData);
+        const card = document.createElement('div');
+        card.className = 'template-card nested-template';
+        card.innerHTML = `
+            <h4>${templateName}</h4>
+            <div class="template-preview">
+                ${exercises.length} exercises • 
+                ${exercises.reduce((s, ex) => s + ex.sets.length, 0)} sets
+            </div>
+        `;
+
+        // Tap / hold for preview
+        card.addEventListener('click', () => showTemplatePreview(templateName));
+        let pressTimer;
+        card.addEventListener('touchstart', () => {
+            pressTimer = setTimeout(() => showTemplatePreview(templateName), 500);
+        });
+        ['touchend','touchmove','touchcancel'].forEach(ev =>
+            card.addEventListener(ev, () => clearTimeout(pressTimer))
+        );
+
+        container.appendChild(card);
+    });
+}
+
+
 
 function deleteFolder(folderName) {
     showConfirmModal(
