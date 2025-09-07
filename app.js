@@ -75,8 +75,8 @@ function loadTemplates() {
     const grid = document.getElementById('templateGrid');
     grid.innerHTML = '';
 
-    const templates = getStoredTemplates();
-    
+    const templates = getStoredTemplates(); // existing helper in your file
+
     if (templates.length === 0) {
         grid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; color: white; padding: 40px;">
@@ -93,44 +93,72 @@ function loadTemplates() {
     });
 }
 
-function createTemplateCard(template) {
-    const card = document.createElement('div');
-    card.className = 'template-card';
+// Clean createTemplateCard: small drag handle for dragging, tap/press -> preview, buttons hook into existing functions
+// Escape HTML helper (safe rendering of template/folder names)
+function escapeHtml(str) {
+    return (str+'').replace(/[&<>"']/g, (s) => {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return map[s];
+    });
+}
 
+function createTemplateCard(template) {
+    // template = { name, exercises }
     const exerciseCount = template.exercises.length;
     const totalSets = template.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
 
-    // Drag handle element (only for dragging)
+    const card = document.createElement('div');
+    card.className = 'template-card';
+    card.dataset.templateName = template.name;
+
+    // handle (only for drag)
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
-    handle.innerHTML = '≡';
+    handle.textContent = '≡';
     handle.draggable = true;
-    handle.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', template.name);
-    });
 
-    // Card inner content
-    card.innerHTML = `
-        <h3>${template.name}</h3>
-        <div class="template-preview">
-            ${exerciseCount} exercises • ${totalSets} sets
-        </div>
+    // inner area
+    const inner = document.createElement('div');
+    inner.className = 'template-inner';
+    inner.innerHTML = `
+        <h3>${escapeHtml(template.name)}</h3>
+        <div class="template-preview">${exerciseCount} exercises • ${totalSets} sets</div>
         <div class="template-actions">
-            <button class="btn btn-primary btn-small" onclick="startWorkout('${template.name}')">▶️ Start</button>
-            <button class="btn btn-danger btn-small" onclick="deleteTemplate('${template.name}')">🗑️ Delete</button>
+            <button class="btn btn-primary btn-small start-btn">▶️ Start</button>
+            <button class="btn btn-danger btn-small delete-btn">🗑️ Delete</button>
         </div>
     `;
 
-    // Prepend handle to the card
-    card.prepend(handle);
+    // assemble
+    card.appendChild(handle);
+    card.appendChild(inner);
 
-    // Tap to preview (ignore buttons + handle clicks)
+    // start button -> use your existing startWorkout
+    inner.querySelector('.start-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        startWorkout(template.name);
+    });
+
+    // delete button -> use your existing deleteTemplate
+    inner.querySelector('.delete-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteTemplate(template.name);
+    });
+
+    // Dragstart from handle: set template name in dataTransfer and show card as drag image (if supported)
+    handle.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', template.name);
+        try { e.dataTransfer.setDragImage(card, 10, 10); } catch (err) { /* ignore if unsupported */ }
+        e.dataTransfer.effectAllowed = 'move';
+    });
+
+    // tap to preview (ignore clicks on actions or handle)
     card.addEventListener('click', (e) => {
         if (e.target.closest('.template-actions') || e.target.classList.contains('drag-handle')) return;
         showTemplatePreview(template.name);
     });
 
-    // Press & hold (mobile) to preview
+    // press & hold on mobile to preview
     let pressTimer;
     card.addEventListener('touchstart', () => {
         pressTimer = setTimeout(() => showTemplatePreview(template.name), 500);
@@ -161,57 +189,70 @@ function showTemplateFolders() {
     const folderName = (prompt("Enter folder name:") || '').trim();
     if (!folderName) return;
 
-    // keep list of folder names
     const folders = JSON.parse(localStorage.getItem('folders') || '[]');
     if (!folders.includes(folderName)) {
         folders.push(folderName);
         localStorage.setItem('folders', JSON.stringify(folders));
     }
-
-    // ensure this folder's bucket exists
     const bucketKey = `folder_${folderName}`;
-    if (!localStorage.getItem(bucketKey)) {
-        localStorage.setItem(bucketKey, JSON.stringify([]));
-    }
+    if (!localStorage.getItem(bucketKey)) localStorage.setItem(bucketKey, JSON.stringify([]));
 
     renderFolders();
 }
 
 
-function showTemplatePreview(templateName, autoClose = false) {
+function showTemplatePreview(templateName) {
     const templateData = localStorage.getItem(`template_${templateName}`);
-    if (!templateData) return;
+    if (!templateData) {
+        showNotification('Template not found', 'error');
+        return;
+    }
 
     const exercises = JSON.parse(templateData);
-
-    // Build preview HTML
-    let html = `<p><strong>${exercises.length}</strong> exercises</p>`;
+    let html = `<p style="color:#666; margin-bottom:8px;"><strong>${exercises.length}</strong> exercises</p>`;
     html += exercises.map(ex => {
         const sets = ex.sets.map(s => {
             const setDisplay = s.type !== 'normal' ? getSetTypeDisplay(s.type) : s.set;
             return `${setDisplay}: ${s.weight || '-'} × ${s.reps || '-'}`;
         }).join('<br>');
-        return `<div style="margin-bottom:12px;"><strong>${ex.name}</strong><br>${sets}</div>`;
+        return `<div style="margin-bottom:10px;"><strong>${escapeHtml(ex.name)}</strong><br>${sets}</div>`;
     }).join('');
 
-    document.getElementById('previewTitle').textContent = `📋 ${templateName}`;
-    document.getElementById('previewContent').innerHTML = html;
-    document.getElementById('previewModal').style.display = 'flex';
-    if (autoClose) {
-        setTimeout(closePreviewModal, 2000);
+    const titleEl = document.getElementById('previewTitle');
+    const contentEl = document.getElementById('previewContent');
+    const modal = document.getElementById('previewModal');
+    const startBtn = document.getElementById('previewStartBtn');
+
+    if (!modal || !contentEl || !titleEl) {
+        showNotification('Preview modal missing from DOM', 'error');
+        return;
+    }
+
+    titleEl.textContent = `📋 ${templateName}`;
+    contentEl.innerHTML = html;
+    modal.style.display = 'flex';
+
+    // show start button inside preview
+    if (startBtn) {
+        startBtn.style.display = 'inline-block';
+        startBtn.onclick = () => {
+            closePreviewModal();
+            showWorkoutSession(templateName);
+        };
     }
 }
 
 function closePreviewModal() {
-    document.getElementById('previewModal').style.display = 'none';
+    const modal = document.getElementById('previewModal');
+    if (modal) modal.style.display = 'none';
 }
 
-document.getElementById('previewModal').addEventListener('click', (e) => {
-    if (e.target.id === 'previewModal') {
-        closePreviewModal();
-    }
+// close preview by tapping outside modal-content
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('previewModal');
+    if (!modal || modal.style.display !== 'flex') return;
+    if (e.target === modal) closePreviewModal();
 });
-
 
 function loadFolders() {
     const grid = document.getElementById('folderGrid');
@@ -230,38 +271,53 @@ function loadFolders() {
 function createFolderCard(name) {
     const card = document.createElement('div');
     card.className = 'template-card folder-card';
+    card.dataset.folderName = name;
+
     card.innerHTML = `
-        <h3>📁 ${name}</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h3>📁 ${escapeHtml(name)}</h3>
+            <div class="delete-btn" aria-hidden="true">Delete</div>
+        </div>
         <div class="folder-dropzone">Drag templates here</div>
         <div class="folder-contents" style="display:none;"></div>
-        <div class="delete-btn">Delete</div>
     `;
 
-    const contentsEl = card.querySelector('.folder-contents');
-
-    // drag target
     const drop = card.querySelector('.folder-dropzone');
+    const contentsEl = card.querySelector('.folder-contents');
+    const delBtn = card.querySelector('.delete-btn');
+
+    // drop handler: move template into folder
     drop.addEventListener('dragover', e => e.preventDefault());
     drop.addEventListener('drop', e => {
         e.preventDefault();
         const templateName = e.dataTransfer.getData('text/plain');
+        if (!templateName) return;
+        if (!localStorage.getItem(`template_${templateName}`)) {
+            showNotification('Dropped item not recognized as a template.', 'error');
+            return;
+        }
         moveTemplateToFolder(templateName, name);
-        showFolderContents(name, contentsEl); // refresh after drop
+        showFolderContents(name, contentsEl);
     });
 
-    // tap folder to toggle contents
+    // tap toggles contents (ignore delete button click)
     card.addEventListener('click', (e) => {
-        if (e.target.closest('.delete-btn')) return; // ignore delete button
+        if (e.target === delBtn) return;
         const isOpen = contentsEl.style.display === 'block';
-        contentsEl.style.display = isOpen ? 'none' : 'block';
-        if (!isOpen) {
+        if (isOpen) {
+            contentsEl.style.display = 'none';
+        } else {
+            contentsEl.style.display = 'block';
             showFolderContents(name, contentsEl);
         }
     });
 
-    // swipe-to-delete
+    // swipe to reveal delete (mobile)
     enableSwipeToDelete(card, name);
-    card.querySelector('.delete-btn').addEventListener('click', () => deleteFolder(name));
+    delBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        deleteFolder(name);
+    });
 
     return card;
 }
@@ -271,46 +327,79 @@ function showFolderContents(folderName, container) {
     const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
 
     if (templates.length === 0) {
-        container.innerHTML = `<p style="color:#666; font-size:14px;">(No templates yet)</p>`;
+        container.innerHTML = `<p style="color:#666; font-size:14px;">(No templates)</p>`;
         return;
     }
 
     container.innerHTML = '';
     templates.forEach(templateName => {
         const templateData = localStorage.getItem(`template_${templateName}`);
-        if (!templateData) return;
+        if (!templateData) {
+            const orphan = document.createElement('div');
+            orphan.className = 'nested-template';
+            orphan.textContent = `${templateName} (missing)`;
+            container.appendChild(orphan);
+            return;
+        }
 
         const exercises = JSON.parse(templateData);
-        const card = document.createElement('div');
-        card.className = 'template-card nested-template';
-        card.innerHTML = `
-            <h4>${templateName}</h4>
-            <div class="template-preview">
-                ${exercises.length} exercises • 
-                ${exercises.reduce((s, ex) => s + ex.sets.length, 0)} sets
+        const tpl = document.createElement('div');
+        tpl.className = 'nested-template';
+        tpl.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <strong>${escapeHtml(templateName)}</strong>
+                    <div class="template-preview" style="font-size:13px;color:#666;">
+                        ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
+                    <button class="btn btn-danger btn-small nested-delete">🗑️</button>
+                </div>
             </div>
         `;
 
-        // Tap / hold for preview
-        card.addEventListener('click', () => showTemplatePreview(templateName));
-        let pressTimer;
-        card.addEventListener('touchstart', () => {
-            pressTimer = setTimeout(() => showTemplatePreview(templateName), 500);
+        // start inside folder
+        tpl.querySelector('.nested-start').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showWorkoutSession(templateName);
         });
+
+        // delete from folder (removes from folder bucket, not the template object)
+        tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteTemplateFromFolder(templateName, folderName);
+            showFolderContents(folderName, container);
+            renderFolders();
+            loadTemplates();
+        });
+
+        // tap/hold preview inside folder
+        tpl.addEventListener('click', () => showTemplatePreview(templateName));
+        let pressTimer;
+        tpl.addEventListener('touchstart', () => {
+            pressTimer = setTimeout(() => showTemplatePreview(templateName), 500);
+        }, { passive: true });
         ['touchend','touchmove','touchcancel'].forEach(ev =>
-            card.addEventListener(ev, () => clearTimeout(pressTimer))
+            tpl.addEventListener(ev, () => clearTimeout(pressTimer), { passive: true })
         );
 
-        container.appendChild(card);
+        container.appendChild(tpl);
     });
 }
 
-
+function deleteTemplateFromFolder(templateName, folderName) {
+    const folderKey = `folder_${folderName}`;
+    const folder = JSON.parse(localStorage.getItem(folderKey) || '[]').filter(n => n !== templateName);
+    localStorage.setItem(folderKey, JSON.stringify(folder));
+    showNotification(`Removed "${templateName}" from ${folderName}`);
+}
 
 function deleteFolder(folderName) {
     showConfirmModal(
         'Delete Folder',
-        `Delete folder "${folderName}"? This removes the folder (not the templates already inside).`,
+        `Delete folder "${folderName}"? This will remove the folder and its bucket.`,
         () => {
             const folders = JSON.parse(localStorage.getItem('folders') || '[]').filter(n => n !== folderName);
             localStorage.setItem('folders', JSON.stringify(folders));
@@ -329,23 +418,31 @@ function renderFolders() {
     grid.innerHTML = '';
 
     const folders = JSON.parse(localStorage.getItem('folders') || '[]');
-    folders.forEach(name => {
-        grid.appendChild(createFolderCard(name));
-    });
+    folders.forEach(name => grid.appendChild(createFolderCard(name)));
 }
 
 function moveTemplateToFolder(templateName, folderName) {
-    const folderKey = `folder_${folderName}`;
-    const folder = JSON.parse(localStorage.getItem(folderKey)) || [];
-    folder.push(templateName);
+    const templateKey = `template_${templateName}`;
+    const templateData = localStorage.getItem(templateKey);
+    if (!templateData) {
+        showNotification('Template not found.', 'error');
+        return;
+    }
 
-    // Remove template from main list
-    localStorage.removeItem(`template_${templateName}`);
-    localStorage.setItem(folderKey, JSON.stringify(folder));
+    const folderKey = `folder_${folderName}`;
+    const folder = JSON.parse(localStorage.getItem(folderKey) || '[]');
+
+    if (!folder.includes(templateName)) {
+        folder.push(templateName);
+        localStorage.setItem(folderKey, JSON.stringify(folder));
+    }
+
+    // remove from main templates
+    localStorage.removeItem(templateKey);
 
     showNotification(`Moved "${templateName}" to ${folderName}`);
     loadTemplates();
-    loadFolders();
+    renderFolders();
 }
 
 function enableSwipeToDelete(card, folderName) {
@@ -355,23 +452,18 @@ function enableSwipeToDelete(card, folderName) {
     card.addEventListener('touchstart', e => {
         startX = e.touches[0].clientX;
         swiped = false;
-    });
+    }, { passive: true });
 
     card.addEventListener('touchmove', e => {
         const diff = e.touches[0].clientX - startX;
         if (diff < -40 && !swiped) {
-            card.classList.add('swiped'); // reveals .delete-btn
+            card.classList.add('swiped');
             swiped = true;
         } else if (diff > 20 && swiped) {
             card.classList.remove('swiped');
             swiped = false;
         }
-    });
-
-    // tap anywhere to close if open
-    card.addEventListener('touchend', () => {
-        // no-op; keep final state from move
-    });
+    }, { passive: true });
 }
 
 
