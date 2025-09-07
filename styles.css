@@ -486,15 +486,27 @@ body {
 }
 
 /* Remove handlebars in Saved Templates list */
-.template-card .drag-handle { display: none !important; }
+.template-card .drag-handle {
+  font-size: 18px;
+  color: #888;
+  cursor: grab;
+  padding: 4px 6px;
+  display: inline-block;
+  user-select: none;
+}
+
 
 /* Swipe-to-delete affordance for folders (already partially present) */
 .folder-card { position: relative; transition: transform 0.25s ease; }
-.folder-card.swiped { transform: translateX(-80px); }
+.folder-card.swiped { 
+    transform: translateX(-80px); 
+    display: flex;
+}
 .folder-card .delete-btn {
-  position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
-  background: #f44336; color: #fff; display: flex; align-items: center; justify-content: center;
-  border-top-right-radius: 15px; border-bottom-right-radius: 15px;
+    display: none;
+    position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+    background: #f44336; color: #fff; display: flex; align-items: center; justify-content: center;
+    border-top-right-radius: 15px; border-bottom-right-radius: 15px;
 }
 
 
@@ -674,4 +686,19 @@ body {
 }
 
 
+}
+
+.folder-contents {
+    margin-top: 10px;
+    padding-left: 10px;
+    border-left: 3px solid #c5d3e0; /* notebook line feel */
+}
+
+.nested-template {
+    background: #fdfdfb;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 10px;
+    box-shadow: none;
 }
