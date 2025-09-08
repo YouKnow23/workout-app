@@ -327,7 +327,9 @@ function createFolderTemplateCard(template, folderName) {
 function createFolderCard(name) {
   const card = document.createElement('div');
   card.className = 'template-card folder-card';
+  card.classList.remove('show-delete'); // ensure delete is hidden initially
   card.dataset.folderName = name;
+
 
   card.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;">
