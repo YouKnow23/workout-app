@@ -196,13 +196,16 @@ card.addEventListener('click', (e) => {
 
 function getStoredTemplates() {
   const templates = [];
+
+  // Collect names of all templates inside folders
   const allFolders = JSON.parse(localStorage.getItem('folders') || '[]');
-  let templatesInFolders = new Set();
+  const templatesInFolders = new Set();
   allFolders.forEach(fname => {
     const list = JSON.parse(localStorage.getItem(`folder_${fname}`) || '[]');
     list.forEach(t => templatesInFolders.add(t));
   });
 
+  // Pull only top-level templates (not in folders)
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key.startsWith('template_')) {
@@ -212,8 +215,10 @@ function getStoredTemplates() {
       templates.push({ name, exercises });
     }
   }
+
   return templates.sort((a, b) => a.name.localeCompare(b.name));
 }
+
 
 
 function showTemplateFolders() {
@@ -453,49 +458,29 @@ function renderFolders() {
 }
 
 function moveTemplateToFolder(templateName, folderName) {
-    const templateKey = `template_${templateName}`;
-    const templateData = localStorage.getItem(templateKey);
-    if (!templateData) {
-        showNotification('Template not found.', 'error');
-        return;
-    }
+  const templateKey = `template_${templateName}`;
+  const templateData = localStorage.getItem(templateKey);
+  if (!templateData) {
+    showNotification('Template not found.', 'error');
+    return;
+  }
 
-    const folderKey = `folder_${folderName}`;
-    const folder = JSON.parse(localStorage.getItem(folderKey) || '[]');
+  const folderKey = `folder_${folderName}`;
+  const folder = JSON.parse(localStorage.getItem(folderKey) || '[]');
 
-    if (!folder.includes(templateName)) {
-        folder.push(templateName);
-        localStorage.setItem(folderKey, JSON.stringify(folder));
-    }
+  if (!folder.includes(templateName)) {
+    folder.push(templateName);
+    localStorage.setItem(folderKey, JSON.stringify(folder));
+  }
 
-    // remove from main templates
-    localStorage.removeItem(templateKey);
+  // ⚠️ Do NOT remove template data anymore!
+  // localStorage.removeItem(templateKey); ← remove this line
 
-    showNotification(`Moved "${templateName}" to ${folderName}`);
-    loadTemplates();
-    renderFolders();
+  showNotification(`Moved "${templateName}" to ${folderName}`);
+  loadTemplates();   // refresh main list
+  renderFolders();   // refresh folder list
 }
 
-function enableSwipeToDelete(card, folderName) {
-    let startX = 0;
-    let swiped = false;
-
-    card.addEventListener('touchstart', e => {
-        startX = e.touches[0].clientX;
-        swiped = false;
-    }, { passive: true });
-
-    card.addEventListener('touchmove', e => {
-        const diff = e.touches[0].clientX - startX;
-        if (diff < -40 && !swiped) {
-            card.classList.add('swiped');
-            swiped = true;
-        } else if (diff > 20 && swiped) {
-            card.classList.remove('swiped');
-            swiped = false;
-        }
-    }, { passive: true });
-}
 
 
 
