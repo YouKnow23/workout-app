@@ -470,6 +470,15 @@ body {
     font-size: 24px;
 }
 
+.folder-card .delete-btn {
+  display: none; /* hide by default */
+}
+
+.folder-card.swiped .delete-btn {
+  display: flex; /* show only when swiped */
+}
+
+
 .folder-card {
     background: #fdfdfb;
     border: 2px dashed #c5d3e0;
