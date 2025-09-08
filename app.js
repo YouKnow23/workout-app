@@ -308,6 +308,29 @@ function loadFolders() {
     }
 }
 
+function createFolderTemplateCard(template, folderName) {
+  const card = document.createElement('div');
+  card.className = 'template-card saved-template';
+  card.innerHTML = `
+    <h3>${escapeHtml(template.name)}</h3>
+  `;
+
+  enableLongPress(card, () => {
+    removeTemplateFromFolder(template.name, folderName);
+  });
+
+  return card;
+}
+
+function removeTemplateFromFolder(templateName, folderName) {
+  let folders = JSON.parse(localStorage.getItem('folders') || '{}');
+  if (folders[folderName]) {
+    folders[folderName] = folders[folderName].filter(t => t.name !== templateName);
+    localStorage.setItem('folders', JSON.stringify(folders));
+    renderFolders(); // refresh UI
+  }
+}
+
 function createFolderCard(name) {
   const card = document.createElement('div');
   card.className = 'template-card folder-card';
@@ -365,27 +388,46 @@ function createFolderCard(name) {
 }
 
     // swipe to reveal delete (mobile)
-function enableSwipeToDelete(card, folderName) {
+function enableSwipeToDelete(card, folderName, onDelete) {
   let startX = 0;
-  let swiped = false;
+  let currentX = 0;
+  let isDragging = false;
 
-  card.addEventListener('touchstart', e => {
+  card.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
-    swiped = false;
-  }, { passive: true });
+    isDragging = true;
+  });
 
-  card.addEventListener('touchmove', e => {
-    const diff = e.touches[0].clientX - startX;
+  card.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentX = e.touches[0].clientX;
+  });
 
-    if (diff < -40 && !swiped) {
-      card.classList.add('swiped');
-      swiped = true;
+  card.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    const diffX = currentX - startX;
+
+    if (diffX < -50) {
+      // Swipe left → show delete
+      card.classList.add('show-delete');
+    } else if (diffX > 50) {
+      // Swipe right → hide delete
+      card.classList.remove('show-delete');
     }
-    if (diff > 20 && swiped) {
-      card.classList.remove('swiped');
-      swiped = false;
-    }
-  }, { passive: true });
+
+    isDragging = false;
+  });
+
+  // Delete button click
+  const delBtn = card.querySelector('.delete-btn');
+  if (delBtn) {
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (typeof onDelete === 'function') {
+        onDelete(folderName);
+      }
+    });
+  }
 }
 
 function showFolderContents(folderName, container) {
@@ -514,6 +556,36 @@ function moveTemplateToFolder(templateName, folderName) {
   renderFolders();   // refresh folder list
 }
 
+function enableLongPress(card, callback, delay = 600) {
+  let pressTimer;
+
+  card.addEventListener('touchstart', (e) => {
+    pressTimer = setTimeout(() => {
+      callback(e);
+    }, delay);
+  });
+
+  card.addEventListener('touchend', () => {
+    clearTimeout(pressTimer);
+  });
+
+  card.addEventListener('touchmove', () => {
+    clearTimeout(pressTimer); // cancel if finger moves
+  });
+
+  // Optional: also support mouse long‑press for desktop
+  card.addEventListener('mousedown', (e) => {
+    pressTimer = setTimeout(() => {
+      callback(e);
+    }, delay);
+  });
+  card.addEventListener('mouseup', () => {
+    clearTimeout(pressTimer);
+  });
+  card.addEventListener('mouseleave', () => {
+    clearTimeout(pressTimer);
+  });
+}
 
 
 
