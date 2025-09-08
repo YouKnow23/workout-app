@@ -160,12 +160,34 @@ function createTemplateCard(template) {
 
     // press & hold on mobile to preview
     let pressTimer;
-    card.addEventListener('touchstart', () => {
-        pressTimer = setTimeout(() => showTemplatePreview(template.name), 500);
+    let dragging = false;
+    card.addEventListener('touchstart', (e) => {
+    pressTimer = setTimeout(() => {
+    // After 500ms, enable drag mode
+    card.draggable = true;
+    dragging = true;
+    // Tell the browser: this card can now be dragged
+    card.dispatchEvent(new Event("dragstart", { bubbles: true }));
+  }, 500); // half a second hold
     }, { passive: true });
-    ['touchend','touchmove','touchcancel'].forEach(ev =>
-        card.addEventListener(ev, () => clearTimeout(pressTimer), { passive: true })
-    );
+    // Cancel if finger lifted or moved
+    ['touchend','touchmove','touchcancel'].forEach(ev => {
+  card.addEventListener(ev, () => {
+    clearTimeout(pressTimer);
+    // disable drag mode after action ends
+    setTimeout(() => {
+      card.draggable = false;
+      dragging = false;
+    }, 100);
+  }, { passive: true });
+});
+
+// Normal tap still works
+card.addEventListener('click', (e) => {
+  if (!dragging) {
+    showTemplatePreview(template.name);
+  }
+});
 
     return card;
 }
@@ -173,17 +195,26 @@ function createTemplateCard(template) {
 
 
 function getStoredTemplates() {
-    const templates = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith('template_')) {
-            const name = key.replace('template_', '');
-            const exercises = JSON.parse(localStorage.getItem(key));
-            templates.push({ name, exercises });
-        }
+  const templates = [];
+  const allFolders = JSON.parse(localStorage.getItem('folders') || '[]');
+  let templatesInFolders = new Set();
+  allFolders.forEach(fname => {
+    const list = JSON.parse(localStorage.getItem(`folder_${fname}`) || '[]');
+    list.forEach(t => templatesInFolders.add(t));
+  });
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('template_')) {
+      const name = key.replace('template_', '');
+      if (templatesInFolders.has(name)) continue; // skip if in folder
+      const exercises = JSON.parse(localStorage.getItem(key));
+      templates.push({ name, exercises });
     }
-    return templates.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return templates.sort((a, b) => a.name.localeCompare(b.name));
 }
+
 
 function showTemplateFolders() {
     const folderName = (prompt("Enter folder name:") || '').trim();
