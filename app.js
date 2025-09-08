@@ -322,14 +322,7 @@ function createFolderTemplateCard(template, folderName) {
   return card;
 }
 
-function removeTemplateFromFolder(templateName, folderName) {
-  let folders = JSON.parse(localStorage.getItem('folders') || '{}');
-  if (folders[folderName]) {
-    folders[folderName] = folders[folderName].filter(t => t.name !== templateName);
-    localStorage.setItem('folders', JSON.stringify(folders));
-    renderFolders(); // refresh UI
-  }
-}
+
 
 function createFolderCard(name) {
   const card = document.createElement('div');
@@ -409,10 +402,10 @@ function enableSwipeToDelete(card, folderName, onDelete) {
 
     if (diffX < -50) {
       // Swipe left → show delete
-      card.classList.add('show-delete');
+      card.classList.add('swiped');
     } else if (diffX > 50) {
       // Swipe right → hide delete
-      card.classList.remove('show-delete');
+      card.classList.remove('swiped');
     }
 
     isDragging = false;
@@ -482,6 +475,16 @@ function showFolderContents(folderName, container) {
       renderFolders();
       loadTemplates();
     });
+
+    // Long‑press to remove from folder
+    enableLongPress(tpl, () => {
+      deleteTemplateFromFolder(templateName, folderName);
+      showFolderContents(folderName, container); // refresh folder view
+      renderFolders();                            // refresh folder list
+      loadTemplates();                            // refresh main list
+    });
+
+
 
     // Tap to preview
     tpl.addEventListener('click', () => showTemplatePreview(templateName));
