@@ -4,6 +4,7 @@ let workoutStartTime = null;
 let workoutTimer = null;
 let exerciseCounter = 0;
 
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     loadTemplates();
