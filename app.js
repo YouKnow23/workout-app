@@ -457,8 +457,8 @@ function showFolderContents(folderName, container) {
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
-          <button class="btn btn-danger btn-small nested-delete">🗑️</button>
+          <button class="btn btn-primary btn-small saved-start>▶️ Start</button>
+          <button class="btn btn-danger btn-small delete-btn>🗑️</button>
         </div>
       </div>
     `;
