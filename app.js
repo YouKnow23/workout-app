@@ -223,18 +223,21 @@ function getStoredTemplates() {
 
 
 function showTemplateFolders() {
-    const folderName = (prompt("Enter folder name:") || '').trim();
-    if (!folderName) return;
+  const folderName = (prompt("Enter folder name:") || '').trim();
+  if (!folderName) return;
 
-    const folders = JSON.parse(localStorage.getItem('folders') || '[]');
-    if (!folders.includes(folderName)) {
-        folders.push(folderName);
-        localStorage.setItem('folders', JSON.stringify(folders));
-    }
-    const bucketKey = `folder_${folderName}`;
-    if (!localStorage.getItem(bucketKey)) localStorage.setItem(bucketKey, JSON.stringify([]));
+  const folders = JSON.parse(localStorage.getItem('folders') || '[]');
+  if (!folders.includes(folderName)) {
+    folders.push(folderName);
+    localStorage.setItem('folders', JSON.stringify(folders));
+  }
 
-    renderFolders();
+  const bucketKey = `folder_${folderName}`;
+  if (!localStorage.getItem(bucketKey)) {
+    localStorage.setItem(bucketKey, JSON.stringify([]));
+  }
+
+  renderFolders();
 }
 
 
@@ -306,156 +309,168 @@ function loadFolders() {
 }
 
 function createFolderCard(name) {
-    const card = document.createElement('div');
-    card.className = 'template-card folder-card';
-    card.dataset.folderName = name;
+  const card = document.createElement('div');
+  card.className = 'template-card folder-card';
+  card.dataset.folderName = name;
 
-    card.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-            <h3>📁 ${escapeHtml(name)}</h3>
-            <div class="delete-btn" aria-hidden="true">Delete</div>
-        </div>
-        <div class="folder-dropzone">Drag templates here</div>
-        <div class="folder-contents" style="display:none;"></div>
-    `;
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3>📁 ${escapeHtml(name)}</h3>
+      <div class="delete-btn">Delete</div>
+    </div>
+    <div class="folder-contents" style="display:none;"></div>
+  `;
 
-    const drop = card.querySelector('.folder-dropzone');
-    const contentsEl = card.querySelector('.folder-contents');
-    const delBtn = card.querySelector('.delete-btn');
+  const delBtn = card.querySelector('.delete-btn');
+  const contents = card.querySelector('.folder-contents');
 
-    // drop handler: move template into folder
-    drop.addEventListener('dragover', e => e.preventDefault());
-    drop.addEventListener('drop', e => {
-        e.preventDefault();
-        const templateName = e.dataTransfer.getData('text/plain');
-        if (!templateName) return;
-        if (!localStorage.getItem(`template_${templateName}`)) {
-            showNotification('Dropped item not recognized as a template.', 'error');
-            return;
-        }
-        moveTemplateToFolder(templateName, name);
-        showFolderContents(name, contentsEl);
-    });
+  // Toggle folder contents open/close
+  card.addEventListener('click', (e) => {
+    if (e.target === delBtn) return; // skip delete click
+    if (contents.style.display === 'block') {
+      contents.style.display = 'none';
+    } else {
+      contents.style.display = 'block';
+      showFolderContents(name, contents);
+    }
+  });
 
-    // tap toggles contents (ignore delete button click)
-    card.addEventListener('click', (e) => {
-        if (e.target === delBtn) return;
-        const isOpen = contentsEl.style.display === 'block';
-        if (isOpen) {
-            contentsEl.style.display = 'none';
-        } else {
-            contentsEl.style.display = 'block';
-            showFolderContents(name, contentsEl);
-        }
-    });
+  // Delete button (swipe to reveal on mobile)
+  delBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteFolder(name);
+  });
+
+  // Enable swipe-to-delete gesture
+  enableSwipeToDelete(card, name);
+
+  return card;
+}
 
     // swipe to reveal delete (mobile)
-    enableSwipeToDelete(card, name);
-    delBtn.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        deleteFolder(name);
-    });
+function enableSwipeToDelete(card, folderName) {
+  let startX = 0;
+  let swiped = false;
 
-    return card;
+  card.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    swiped = false;
+  }, { passive: true });
+
+  card.addEventListener('touchmove', e => {
+    const diff = e.touches[0].clientX - startX;
+
+    if (diff < -40 && !swiped) {
+      card.classList.add('swiped');
+      swiped = true;
+    }
+    if (diff > 20 && swiped) {
+      card.classList.remove('swiped');
+      swiped = false;
+    }
+  }, { passive: true });
 }
 
 function showFolderContents(folderName, container) {
-    const folderKey = `folder_${folderName}`;
-    const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
+  const folderKey = `folder_${folderName}`;
+  const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
 
-    if (templates.length === 0) {
-        container.innerHTML = `<p style="color:#666; font-size:14px;">(No templates)</p>`;
-        return;
+  if (templates.length === 0) {
+    container.innerHTML = `<p style="color:#666; font-size:14px;">(No templates)</p>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  templates.forEach(templateName => {
+    const templateData = localStorage.getItem(`template_${templateName}`);
+    if (!templateData) {
+      const orphan = document.createElement('div');
+      orphan.className = 'nested-template';
+      orphan.textContent = `${templateName} (missing)`;
+      container.appendChild(orphan);
+      return;
     }
 
-    container.innerHTML = '';
-    templates.forEach(templateName => {
-        const templateData = localStorage.getItem(`template_${templateName}`);
-        if (!templateData) {
-            const orphan = document.createElement('div');
-            orphan.className = 'nested-template';
-            orphan.textContent = `${templateName} (missing)`;
-            container.appendChild(orphan);
-            return;
-        }
+    const exercises = JSON.parse(templateData);
+    const tpl = document.createElement('div');
+    tpl.className = 'nested-template';
+    tpl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>${escapeHtml(templateName)}</strong>
+          <div class="template-preview" style="font-size:13px;color:#666;">
+            ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
+          <button class="btn btn-danger btn-small nested-delete">🗑️</button>
+        </div>
+      </div>
+    `;
 
-        const exercises = JSON.parse(templateData);
-        const tpl = document.createElement('div');
-        tpl.className = 'nested-template';
-        tpl.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                    <strong>${escapeHtml(templateName)}</strong>
-                    <div class="template-preview" style="font-size:13px;color:#666;">
-                        ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
-                    </div>
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
-                    <button class="btn btn-danger btn-small nested-delete">🗑️</button>
-                </div>
-            </div>
-        `;
-
-        // start inside folder
-        tpl.querySelector('.nested-start').addEventListener('click', (e) => {
-            e.stopPropagation();
-            showWorkoutSession(templateName);
-        });
-
-        // delete from folder (removes from folder bucket, not the template object)
-        tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteTemplateFromFolder(templateName, folderName);
-            showFolderContents(folderName, container);
-            renderFolders();
-            loadTemplates();
-        });
-
-        // tap/hold preview inside folder
-        tpl.addEventListener('click', () => showTemplatePreview(templateName));
-        let pressTimer;
-        tpl.addEventListener('touchstart', () => {
-            pressTimer = setTimeout(() => showTemplatePreview(templateName), 500);
-        }, { passive: true });
-        ['touchend','touchmove','touchcancel'].forEach(ev =>
-            tpl.addEventListener(ev, () => clearTimeout(pressTimer), { passive: true })
-        );
-
-        container.appendChild(tpl);
+    // Start workout inside folder
+    tpl.querySelector('.nested-start').addEventListener('click', (e) => {
+      e.stopPropagation();
+      showWorkoutSession(templateName);
     });
+
+    // Delete template from folder only (not from storage)
+    tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteTemplateFromFolder(templateName, folderName);
+      showFolderContents(folderName, container);
+      renderFolders();
+      loadTemplates();
+    });
+
+    // Tap to preview
+    tpl.addEventListener('click', () => showTemplatePreview(templateName));
+
+    container.appendChild(tpl);
+  });
 }
 
 function deleteTemplateFromFolder(templateName, folderName) {
-    const folderKey = `folder_${folderName}`;
-    const folder = JSON.parse(localStorage.getItem(folderKey) || '[]').filter(n => n !== templateName);
-    localStorage.setItem(folderKey, JSON.stringify(folder));
-    showNotification(`Removed "${templateName}" from ${folderName}`);
+  const folderKey = `folder_${folderName}`;
+  const folder = JSON.parse(localStorage.getItem(folderKey) || '[]').filter(n => n !== templateName);
+  localStorage.setItem(folderKey, JSON.stringify(folder));
+  showNotification(`Removed "${templateName}" from ${folderName}`);
 }
 
 function deleteFolder(folderName) {
-    showConfirmModal(
-        'Delete Folder',
-        `Delete folder "${folderName}"? This will remove the folder and its bucket.`,
-        () => {
-            const folders = JSON.parse(localStorage.getItem('folders') || '[]').filter(n => n !== folderName);
-            localStorage.setItem('folders', JSON.stringify(folders));
-            localStorage.removeItem(`folder_${folderName}`);
-            renderFolders();
-            showNotification('Folder deleted');
-        }
-    );
+  showConfirmModal(
+    'Delete Folder',
+    `Delete folder "${folderName}"? This will remove the folder and its bucket.`,
+    () => {
+      const folders = JSON.parse(localStorage.getItem('folders') || '[]').filter(n => n !== folderName);
+      localStorage.setItem('folders', JSON.stringify(folders));
+      localStorage.removeItem(`folder_${folderName}`);
+      renderFolders();
+      showNotification('Folder deleted');
+    }
+  );
 }
 
 
 
 function renderFolders() {
-    const grid = document.getElementById('folderGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
+  const grid = document.getElementById('folderGrid');
+  if (!grid) return;
 
-    const folders = JSON.parse(localStorage.getItem('folders') || '[]');
-    folders.forEach(name => grid.appendChild(createFolderCard(name)));
+  grid.innerHTML = '';
+
+  const folders = JSON.parse(localStorage.getItem('folders') || '[]');
+
+  if (folders.length === 0) {
+    grid.innerHTML = `<p style="color:#aaa; text-align:center;">No folders yet</p>`;
+    return;
+  }
+
+  folders.forEach(name => {
+    const card = createFolderCard(name);
+    grid.appendChild(card);
+  });
 }
 
 function moveTemplateToFolder(templateName, folderName) {
