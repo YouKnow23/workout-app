@@ -711,3 +711,31 @@ body {
     padding: 10px;
     box-shadow: none;
 }
+
+/* Mobile-specific styling for swipe-to-delete on folders */
+@media only screen and (max-width: 768px) {
+  .folder-card {
+    position: relative;
+    overflow: hidden; /* ensures delete button doesn’t break layout */
+  }
+
+  .folder-card .delete-btn {
+    position: absolute;
+    right: -80px;         /* start hidden off-screen */
+    top: 0;
+    height: 100%;
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e74c3c;   /* red delete background */
+    color: #fff;
+    font-weight: bold;
+    transition: right 0.3s ease;
+  }
+
+  .folder-card.swiped .delete-btn {
+    right: 0; /* slide in when swiped */
+  }
+}
+
