@@ -636,6 +636,7 @@ body {
     }
 
     .exercise-header .btn-danger {
+        position: static;
         padding: 4px 6px;
         font-size: 14px;
         min-height: 28px;
