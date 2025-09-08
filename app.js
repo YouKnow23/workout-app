@@ -344,6 +344,23 @@ function createFolderCard(name) {
   // Enable swipe-to-delete gesture
   enableSwipeToDelete(card, name);
 
+  card.addEventListener('dragover', (e) => {
+    e.preventDefault(); // allow drop
+    card.classList.add('folder-dropzone');
+  });
+  card.addEventListener('dragleave', () => {
+    card.classList.remove('folder-dropzone');
+  });
+  card.addEventListener('drop', (e) => {
+    e.preventDefault();
+    card.classList.remove('folder-dropzone');
+    const templateName = e.dataTransfer.getData('text/plain');
+    if (templateName) {
+      moveTemplateToFolder(templateName, name);
+    }
+  });
+
+
   return card;
 }
 
