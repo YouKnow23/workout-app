@@ -479,7 +479,8 @@ function showFolderContents(folderName, container) {
     });
 
     // Long‑press to remove from folder
-    enableLongPress(tpl, () => {
+    enableLongPress(tpl, (e) => {
+      e.stopPropagation();  
       deleteTemplateFromFolder(templateName, folderName);
       showFolderContents(folderName, container); // refresh folder view
       renderFolders();                            // refresh folder list
