@@ -99,35 +99,45 @@ function updateBottomNav(activeTab) {
 
 // Template management
 function loadTemplates() {
-    const grid = document.getElementById('templateGrid');
-    grid.innerHTML = '';
+  const grid = document.getElementById('templateGrid');
+  grid.innerHTML = '';
 
-    grid.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    });
+  grid.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    grid.classList.add('dragover');
+  });
 
-    grid.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+  grid.addEventListener('dragleave', () => {
+    grid.classList.remove('dragover');
+  });
 
-        if (data.fromFolder && data.templateName) {
-            const key = `template_${data.templateName}`;
-            if (!localStorage.getItem(key)) {
-                console.error(`Template "${data.templateName}" not found in storage`);
-                return;
-            }
-            deleteTemplateFromFolder(data.templateName, data.fromFolder);
-            loadTemplates();
-            renderFolders();
-        }
-    });
+  grid.addEventListener('drop', (e) => {
+    e.preventDefault();
+    grid.classList.remove('dragover');
 
-    const templates = getStoredTemplates();
-    templates.forEach(template => {
-        const card = createTemplateCard(template);
-        grid.appendChild(card);
-    });
+    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+
+    if (data.fromFolder && data.templateName) {
+      // ✅ Remove from folder
+      deleteTemplateFromFolder(data.templateName, data.fromFolder);
+
+      // ✅ Restore to saved templates
+      const templateKey = `template_${data.templateName}`;
+      if (!localStorage.getItem(templateKey)) {
+        localStorage.setItem(templateKey, JSON.stringify({ name: data.templateName }));
+      }
+
+      loadTemplates();
+      renderFolders();
+    }
+  });
+
+  const templates = getStoredTemplates();
+  templates.forEach(template => {
+    const card = createTemplateCard(template);
+    grid.appendChild(card);
+  });
 }
 
 
@@ -363,31 +373,56 @@ function createFolderTemplateCard(template, folderName) {
 
 
 function createFolderCard(name) {
-    const card = document.createElement('div');
-    card.className = 'template-card folder-card';
-    card.dataset.folderName = name;
+  const card = document.createElement('div');
+  card.className = 'template-card folder-card dropzone';
+  card.dataset.folderName = name;
 
-    card.innerHTML = `
-        <div class="folder-header">
-            <h3>📁 ${escapeHtml(name)}</h3>
-            <button class="nested-delete">Delete</button>
-        </div>
-        <div class="folder-contents" style="display:none;"></div>
-    `;
+  card.innerHTML = `
+    <div class="folder-header">
+      <h3>📁 ${escapeHtml(name)}</h3>
+      <button class="nested-delete">Delete</button>
+    </div>
+    <div class="folder-contents" style="display:none;"></div>
+  `;
 
-    const delBtn = card.querySelector('.nested-delete');
-    delBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteFolder(name);
-    });
+  const delBtn = card.querySelector('.nested-delete');
+  const contents = card.querySelector('.folder-contents');
 
-    // Swipe-to-delete for mobile
-    enableSwipeToDelete(card, name, () => {
-        deleteFolder(name);
-    });
+  // ✅ Delete folder on button click
+  delBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteFolder(name);
+  });
 
-    card.classList.add('dropzone');
-    return card;
+  // ✅ Swipe-to-delete for mobile
+  enableSwipeToDelete(card, name, () => {
+    deleteFolder(name);
+  });
+
+  // ✅ Drop target logic — allow templates to be dropped into folder
+  card.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    card.classList.add('dragover'); // optional visual cue
+  });
+
+  card.addEventListener('dragleave', () => {
+    card.classList.remove('dragover');
+  });
+
+  card.addEventListener('drop', (e) => {
+    e.preventDefault();
+    card.classList.remove('dragover');
+
+    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+    if (data.templateName) {
+      moveTemplateToFolder(data.templateName, name);
+      renderFolders();
+      loadTemplates();
+    }
+  });
+
+  return card;
 }
 
 function enableTouchDrag(element, templateName, fromFolder = null) {
