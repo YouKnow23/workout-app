@@ -584,6 +584,16 @@ function showFolderContents(folderName, container) {
             </div>
         `;
 
+        // ✅ Make draggable so it can be dragged out of the folder
+        tpl.draggable = true;
+        tpl.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                templateName,
+                fromFolder: folderName
+            }));
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
         tpl.querySelector('.nested-start').addEventListener('click', (e) => {
             e.stopPropagation();
             showWorkoutSession(templateName);
