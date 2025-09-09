@@ -113,25 +113,28 @@ function loadTemplates() {
   });
 
   grid.addEventListener('drop', (e) => {
-    e.preventDefault();
-    grid.classList.remove('dragover');
+  e.preventDefault();
+  grid.classList.remove('dragover');
 
-    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+  const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
 
-    if (data.fromFolder && data.templateName) {
-      // ✅ Remove from folder
-      deleteTemplateFromFolder(data.templateName, data.fromFolder);
+  // Only handle drops from a folder
+  if (data.fromFolder && data.templateName) {
+    // 1️⃣ Remove from folder
+    deleteTemplateFromFolder(data.templateName, data.fromFolder);
 
-      // ✅ Restore to saved templates
-      const templateKey = `template_${data.templateName}`;
-      if (!localStorage.getItem(templateKey)) {
-        localStorage.setItem(templateKey, JSON.stringify({ name: data.templateName, exercises: [] }));
-      }
+    // 2️⃣ Restore to saved templates with consistent structure
+    const templateKey = `template_${data.templateName}`;
+    localStorage.setItem(templateKey, JSON.stringify({
+      name: data.templateName,
+      exercises: [] // keep structure consistent for getStoredTemplates()
+    }));
 
-      loadTemplates();
-      renderFolders();
-    }
-  });
+    // 3️⃣ Refresh UI
+    loadTemplates();
+    renderFolders();
+  }
+});
 
   const templates = getStoredTemplates();
   templates.forEach(template => {
