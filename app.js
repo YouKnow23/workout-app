@@ -138,6 +138,10 @@ function loadTemplates() {
 
   // Render all top-level templates
   const templates = getStoredTemplates();
+   if (templates.length === 0) {
+    grid.innerHTML = `<p style="color:#aaa; text-align:center;">No templates saved yet</p>`;
+    return;
+  }
   templates.forEach(template => {
     const card = createTemplateCard(template);
     grid.appendChild(card);
