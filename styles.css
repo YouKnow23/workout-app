@@ -1,782 +1,175 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* =========================
+   Base Layout & Typography
+   ========================= */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #fafaf7;
-    min-height: 100vh;
-    color: #333;
-}
-
-.container {
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 20px;
-    min-height: 100vh;
-    padding-bottom: 80px;
-}
-
-.header {
-    display:flex;
-    flex-wrap:wrap;
-    text-align: center;
-    margin-bottom: 30px;
-    color: white;
-}
-
-.header h2 {    
-    margin-bottom: 5px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    color: #2c3e50;
-}
-
-.page-nav {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-}
-
-.btn {
-    background: white;
-    border: none;
-    padding: 15px 25px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: white;
-}
-
-.btn-secondary {
-    background: linear-gradient(135deg, #2196F3, #1976D2);
-    color: white;
-}
-
-.btn-danger {
-    background: linear-gradient(135deg, #f44336, #d32f2f);
-    color: white;
-}
-
-.btn-small {
-    padding: 8px 15px;
-    font-size: 14px;
-    min-height: 36px;
-}
-
-.template-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.template-card {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.template-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.template-card h3 {
-    font-size: 1.3rem;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.template-card-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.drag-handle {
-  font-size: 20px;
-  cursor: grab;
-  padding: 4px 8px;
+  margin: 0;
+  font-family: sans-serif;
   background: #f5f5f5;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
-
-.template-preview {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 15px;
-}
-
-.template-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-.modal h3 {
-    margin-bottom: 20px;
-    font-size: 1.4rem;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.template-form {
-    background: #ffffff;
-    border-radius: 6px;
-    border: 1px solid #cfd8dc;
-    padding: 12px;
-    margin-bottom: 12px;
-    box-shadow: none;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #333;
-}
-
-.form-input {
-    width: 100%;
-    padding: 10px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 14px;
-    transition: border-color 0.3s ease;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: #4CAF50;
-}
-
-.exercise-block {
-  background: #ffffff;
-  border: 1px solid #cfd8dc;
-  border-radius: 6px;
-  padding: 8px 10px;
-  margin-bottom: 10px;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.exercise-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-
-.drag-handle {
-    font-size: 24px;
-    color: #999;
-    cursor: grab;
-    padding: 10px;
-    border-radius: 8px;
-    background: #f5f5f5;
-}
-
-.drag-handle:active {
-    cursor: grabbing;
-}
-
-.exercise-name {
-  font-size: 1.1rem;
-  font-weight: 600;
   color: #333;
 }
 
-
-.exercise-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 14px;
+.container {
+  padding: 1rem;
 }
 
-.exercise-table th,
-.exercise-table td {
-  padding: 8px 4px;
-  text-align: center;
-  border-bottom: 1px solid #e0e0e0;
+h2, h3 {
+  margin: 0;
 }
 
-.exercise-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #555;
+/* =========================
+   Template & Folder Grids
+   ========================= */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
 }
 
-
-
-.set-type-btn {
-    background: #e3f2fd;
-    border: 2px solid #2196F3;
-    border-radius: 20px;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1976D2;
-    cursor: pointer;
-    min-width: 60px;
-    position: relative;
-}
-
-.set-type-btn.warmup {
-    background: #fff3e0;
-    border-color: #ff9800;
-    color: #f57c00;
-}
-
-.set-type-btn.drop-set {
-    background: #fce4ec;
-    border-color: #e91e63;
-    color: #c2185b;
-}
-
-.set-type-btn.rest-pause {
-    background: #f3e5f5;
-    border-color: #9c27b0;
-    color: #7b1fa2;
-}
-
-.set-input {
-  width: 60px;
-  padding: 6px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 2px solid #e0e0e0;
-  text-align: center;
-}
-
-.set-input:focus {
-  border-color: #4CAF50;
-  outline: none;
-}
-
-
-.remove-btn {
-    background: #ffebee;
-    border: 2px solid #f44336;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    color: #d32f2f;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #4CAF50;
-    color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 1001;
-    transform: translateX(400px);
-    transition: transform 0.3s ease;
-}
-
-.notification.show {
-    transform: translateX(0);
-}
-
-.hidden {
-    display: none !important;
-}
-
-.drag-ghost {
-    opacity: 0.5;
-}
-
-.workout-timer {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    color: #333;
-    padding: 15px 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    font-weight: 600;
-    z-index: 100;
-    text-align: center;
-    backdrop-filter: blur(10px);
-}
-
-.workout-date {
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.workout-time {
-    font-size: 18px;
-    color: #4CAF50;
-}
-
-.set-type-dropdown {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    border: 2px solid #e0e0e0;
-    min-width: 150px;
-    overflow: hidden;
-    animation: dropdownFadeIn 0.2s ease;
-}
-
-@keyframes dropdownFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.dropdown-option {
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    font-weight: 600;
-    font-size: 14px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.dropdown-option:last-child {
-    border-bottom: none;
-}
-
-.dropdown-option:hover {
-    background: #f8f9fa;
-}
-
-.dropdown-option.selected {
-    background: #e3f2fd;
-    color: #1976D2;
-}
-
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-top: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-around;
-    padding: 10px 0;
-    box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
-    z-index: 100;
-}
-
-.bottom-nav-btn {
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #666;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.bottom-nav-btn:hover {
-    color: #4CAF50;
-    transform: translateY(-2px);
-}
-
-.bottom-nav-btn.active {
-    color: #4CAF50;
-}
-
-.bottom-nav-icon {
-    font-size: 24px;
-}
-
-.folder-card .delete-btn {
-  display: none; /* hide by default */
-}
-
-.folder-card.swiped .delete-btn {
-  display: flex; /* show only when swiped */
-}
-
-
-.folder-card {
-    background: #fdfdfb;
-    border: 2px dashed #c5d3e0;
-    color: #2c3e50;
-    text-align: center;
-}
-
-.folder-dropzone {
-    padding: 15px;
-    font-size: 14px;
-    color: #666;
-    border-top: 1px solid #e0e0e0;
-    margin-top: 10px;
-}
-
-/* Remove handlebars in Saved Templates list */
-.template-card .drag-handle {
-  font-size: 18px;
-  color: #888;
-  cursor: grab;
-  padding: 4px 6px;
-  display: inline-block;
-  user-select: none;
-}
-
-
-/* Swipe-to-delete affordance for folders (already partially present) */
-.folder-card { position: relative; transition: transform 0.25s ease; }
-.folder-card.swiped { 
-    transform: translateX(-80px); 
-    display: flex;
-}
-.folder-card .delete-btn {
-    display: none;
-    position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
-    background: #f44336; color: #fff; display: flex; align-items: center; justify-content: center;
-    border-top-right-radius: 15px; border-bottom-right-radius: 15px;
-}
-
-
-
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .container {
-        margin: 0;
-        border-radius: 0;
-    }
-    
-    
-    
-    .tab-content {
-        padding: 20px 15px;
-    }
-
-    .page-nav {
-        margin-bottom: 12px;     /* move buttons closer to header */
-        gap: 6px;              /* less space between */
-        
-    }
-
-        
-
-
-    .page-nav .btn {
-        padding: 6px 12px;
-        font-size: 13px;
-        min-height: 32px;
-    }
-    
-    .sets-container {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .exercise-table th,
-    .exercise-table td {
-        padding: 4px 2px;     /* slimmer rows */
-        font-size: 11px;      /* smaller text */
-    }
-
-    .header h1 {
-        font-size: 2rem;
-        margin-left: 20px;
-        color: #2c3e50; /* darker ink-like text */
-        font-family: 'Georgia', serif; /* handwritten / journal feel */
-    }
-
-    .form-group {
-        margin: 2%;
-    }
-
-    .template-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .exercise-table {
-        font-size: 10px;
-    }
-
-    .set-input {
-        width: 45px;          /* narrower inputs */
-        padding: 4px;
-        font-size: 16px;
-    }
-
-    .modal-content {
-        padding: 20px;
-    }
-
-    .modal-buttons {
-        flex-direction: column;
-    }
-
-    /* Slim down template form */
-    .template-form {
-        padding: 8px;
-        margin-bottom: 8px;
-        margin-top: 8px ;
-        border-radius: 6px;
-        box-shadow: none;
-    }
-
-    /* Slim down exercise blocks */
-    .exercise-block {
-        padding: 6px 8px;
-        margin-bottom: 8px;
-        border-radius: 6px;
-        box-shadow: none;
-        gap: 6px;
-    }
-
-    /* Slim down form inputs */
-    .form-input {
-        padding: 8px;
-        font-size: 16px;
-    }
-    
-    /* Make exercise name input smaller */
-    .exercise-name {
-        font-size: 16px;     /* smaller text */
-        padding: 5px ;    /* less padding inside */
-        border-radius: 4px;  /* smaller corners */
-        flex: 1;             /* still stretch across row */
-        min-width: 0;        /* prevent overflow */
-    }
-    #createTemplate > .btn-secondary {
-        padding: 6px 10px;
-        font-size: 12px;
-        min-height: 34px;
-    }
-
-    .drag-handle {
-        font-size: 18px;   /* was 24px */
-        padding: 4px;
-    }
-
-    .exercise-header .btn-danger {
-        position: static;
-        padding: 4px 6px;
-        font-size: 14px;
-        min-height: 28px;
-    }
-    .exercise-block .btn-secondary.btn-small {
-        padding: 4px 8px;
-        font-size: 12px;
-        min-height: 28px;
-    }
-
-    .container {
-        padding-left: 5px;
-        padding-right: 5px;
-    }
-
-    .template-form,
-    .exercise-block {
-        border-radius: 2px;   /* no rounded corners on mobile */
-}
-
-.bottom-nav {
-    padding: 8px 0;
-    height: 10%
-
-}
-
-#previewModal .modal-content {
-    max-height: 80vh;
-    overflow-y: auto;
-    text-align: left;
-}
-
+.template-card,
 .folder-card {
   position: relative;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   transition: transform 0.3s ease;
 }
 
-.folder-card.swiped {
-  transform: translateX(-80px);
+.folder-card {
+  background: #fdfdfb;
+  border: 2px dashed #c5d3e0;
+  color: #2c3e50;
 }
 
-.delete-btn {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 80px;
-  background: #f44336;
-  color: white;
+/* =========================
+   Folder Header & Contents
+   ========================= */
+.folder-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-}
-.template-card,
-.template-card * {
-  -webkit-tap-highlight-color: transparent;
-}
-
-
 }
 
 .folder-contents {
-    margin-top: 10px;
-    padding-left: 10px;
-    border-left: 3px solid #c5d3e0; /* notebook line feel */
+  margin-top: 0.5rem;
 }
 
-.nested-template {
-    background: #fdfdfb;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    padding: 10px;
-    box-shadow: none;
+/* =========================
+   Swipe-to-Delete (Folders)
+   ========================= */
+/* Base delete button hidden off-screen */
+.folder-card .delete-btn,
+.folder-card .nested-delete {
+  position: absolute;
+  right: -80px;
+  top: 0;
+  height: 100%;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e74c3c;
+  color: #fff;
+  font-weight: bold;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  transition: right 0.3s ease;
 }
 
+/* Show delete when swiped */
+.folder-card.swiped .delete-btn,
+.folder-card.swiped .nested-delete {
+  right: 0;
+}
+
+/* =========================
+   Swipe-to-Delete (Nested Templates)
+   ========================= */
 .nested-delete {
-    display: none;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+  display: none;
 }
 
 .nested-template.swiped .nested-delete {
-    display: inline-block;
+  display: inline-block;
 }
 
-.saved-template .delete-btn {
-    position: static !important;
-    transform: none !important;
-    margin: 0;
+/* =========================
+   Drag Handle
+   ========================= */
+.drag-handle {
+  cursor: grab;
+  font-size: 1.2rem;
+  padding: 0.25rem;
+  background: transparent;
 }
 
-.folder-card .delete-btn {
-  display: none; /* hidden by default */
+/* =========================
+   Dropzone Highlight
+   ========================= */
+.dropzone {
+  border: 2px dashed transparent;
 }
 
-.folder-card.swiped .delete-btn {
-  display: flex; /* only show when swiped left */
+.dropzone.dragover {
+  border-color: #4F46E5;
+  background: rgba(79, 70, 229, 0.05);
 }
 
-.dropzone.highlight-drop {
-  outline: 3px dashed #4CAF50;
-  background-color: rgba(76, 175, 80, 0.1);
+/* =========================
+   Buttons
+   ========================= */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
+.btn-primary {
+  background: #4F46E5;
+  color: #fff;
+}
 
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+}
 
-/* Mobile-specific styling for swipe-to-delete on folders */
+/* =========================
+   Page Navigation
+   ========================= */
+.page-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* =========================
+   Modals
+   ========================= */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* =========================
+   Mobile Adjustments
+   ========================= */
 @media only screen and (max-width: 768px) {
-  .folder-card {
-    position: relative;
-    overflow: hidden; /* ensures delete button doesn’t break layout */
+  .template-grid {
+    grid-template-columns: 1fr;
   }
-
-  .folder-card .delete-btn {
-    position: absolute;
-    right: -80px;         /* start hidden off-screen */
-    top: 0;
-    height: 100%;
-    width: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #e74c3c;   /* red delete background */
-    color: #fff;
-    font-weight: bold;
-    transition: right 0.3s ease;
-  }
-
-  .folder-card.swiped .delete-btn {
-    right: 0; /* slide in when swiped */
-  }
-
-  .save-template .delete-btn {
-    position: static !important;
-    transform: none !important;
-    margin: 0;
-
-
-  }
-
-
-
 }
