@@ -99,14 +99,37 @@ function updateBottomNav(activeTab) {
 
 // Template management
 function loadTemplates() {
-  const grid = document.getElementById('templateGrid');
-  grid.innerHTML = '';
+    const grid = document.getElementById('templateGrid');
+    grid.innerHTML = '';
 
-  const templates = getStoredTemplates();
-  templates.forEach(template => {
-    const card = createTemplateCard(template);
-    grid.appendChild(card);
-  });
+    // --- Drop target setup ---
+    grid.addEventListener('dragover', (e) => {
+        e.preventDefault(); // allow drop
+        e.dataTransfer.dropEffect = 'move';
+    });
+
+    grid.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+
+        if (data.fromFolder && data.templateName) {
+            const key = `template_${data.templateName}`;
+            if (!localStorage.getItem(key)) {
+                console.error(`Template "${data.templateName}" not found in storage`);
+                return;
+            }
+            deleteTemplateFromFolder(data.templateName, data.fromFolder);
+            loadTemplates();   // refresh main list
+            renderFolders();   // refresh folder list
+        }
+    });
+
+    // --- Normal rendering ---
+    const templates = getStoredTemplates();
+    templates.forEach(template => {
+        const card = createTemplateCard(template);
+        grid.appendChild(card);
+    });
 }
 
 
@@ -611,22 +634,26 @@ function deleteFolder(folderName) {
 
 
 function renderFolders() {
-  const grid = document.getElementById('folderGrid');
-  if (!grid) return;
+    const grid = document.getElementById('folderGrid');
+    if (!grid) return;
 
-  grid.innerHTML = '';
+    grid.innerHTML = '';
 
-  const folders = JSON.parse(localStorage.getItem('folders') || '[]');
+    const folders = JSON.parse(localStorage.getItem('folders') || '[]');
 
- 
-  folders.forEach(name => {
-        const folderDiv = createFolderCard(name); // this is your folder card element
+    if (folders.length === 0) {
+        grid.innerHTML = `<p style="color:#aaa; text-align:center;">No folders yet</p>`;
+        return;
+    }
 
-        // Prevent clicks on nested-delete or nested-start from triggering folder open
+    folders.forEach(name => {
+        const folderDiv = createFolderCard(name); // your folder card element
+
+        // ✅ Prevent clicks on delete/start buttons from opening the folder
         folderDiv.addEventListener('click', (e) => {
             if (e.target.closest('.nested-delete') || e.target.closest('.nested-start')) return;
 
-            // open folder logic here
+            // Open folder contents
             const contentsContainer = folderDiv.querySelector('.folder-contents');
             if (contentsContainer) {
                 showFolderContents(name, contentsContainer);
@@ -635,7 +662,6 @@ function renderFolders() {
 
         grid.appendChild(folderDiv);
     });
-
 }
 
 function showFolderContents(folderName, container) {
