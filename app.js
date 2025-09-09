@@ -102,6 +102,7 @@ function loadTemplates() {
   const grid = document.getElementById('templateGrid');
   grid.innerHTML = '';
 
+  // Highlight grid when dragging over it
   grid.addEventListener('dragover', (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -112,29 +113,59 @@ function loadTemplates() {
     grid.classList.remove('dragover');
   });
 
+  // Drop directly on grid
   grid.addEventListener('drop', (e) => {
-  e.preventDefault();
-  grid.classList.remove('dragover');
+    e.preventDefault();
+    grid.classList.remove('dragover');
 
-  const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+    if (data.fromFolder && data.templateName) {
+      restoreTemplateFromFolder(data.templateName, data.fromFolder);
+    }
+  });
 
-  // Only handle drops from a folder
-  if (data.fromFolder && data.templateName) {
-    // 1️⃣ Remove from folder
-    deleteTemplateFromFolder(data.templateName, data.fromFolder);
+  // 🔹 NEW: Global drop fallback — anywhere outside a folder
+  document.addEventListener('dragover', (e) => {
+    e.preventDefault(); // allow drop anywhere
+  });
 
-    // 2️⃣ Restore to saved templates with consistent structure
-    const templateKey = `template_${data.templateName}`;
-    localStorage.setItem(templateKey, JSON.stringify({
-      name: data.templateName,
-      exercises: [] // keep structure consistent for getStoredTemplates()
-    }));
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
 
-    // 3️⃣ Refresh UI
-    loadTemplates();
-    renderFolders();
-  }
-});
+    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+
+    if (data.fromFolder && data.templateName) {
+      // Only restore if not dropped inside another folder
+      if (!e.target.closest('.folder-card')) {
+        restoreTemplateFromFolder(data.templateName, data.fromFolder);
+      }
+    }
+  });
+
+  // Render all top-level templates
+  const templates = getStoredTemplates();
+  templates.forEach(template => {
+    const card = createTemplateCard(template);
+    grid.appendChild(card);
+  });
+}
+
+// Helper to avoid repeating logic
+function restoreTemplateFromFolder(templateName, folderName) {
+  // 1️⃣ Remove from folder
+  deleteTemplateFromFolder(templateName, folderName);
+
+  // 2️⃣ Restore to saved templates
+  const templateKey = `template_${templateName}`;
+  localStorage.setItem(templateKey, JSON.stringify({
+    name: templateName,
+    exercises: [] // keep structure consistent
+  }));
+
+  // 3️⃣ Refresh UI
+  loadTemplates();
+  renderFolders();
+
 
   const templates = getStoredTemplates();
   templates.forEach(template => {
