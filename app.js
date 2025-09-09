@@ -427,66 +427,81 @@ function enableSwipeToDelete(card, folderName, onDelete) {
 }
 
 function showFolderContents(folderName, container) {
-  const folderKey = `folder_${folderName}`;
-  const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
+    const folderKey = `folder_${folderName}`;
+    const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
 
-  if (templates.length === 0) {
-    container.innerHTML = `<p style="color:#666; font-size:14px;">(No templates)</p>`;
-    return;
-  }
+    container.innerHTML = '';
 
-  container.innerHTML = '';
-  templates.forEach(templateName => {
-    const templateData = localStorage.getItem(`template_${templateName}`);
-    if (!templateData) {
-      const orphan = document.createElement('div');
-      orphan.className = 'nested-template';
-      orphan.textContent = `${templateName} (missing)`;
-      container.appendChild(orphan);
-      return;
+    if (templates.length === 0) {
+        container.innerHTML = `<p style="color:#666;">(No templates)</p>`;
+        return;
     }
 
-    const exercises = JSON.parse(templateData);
-    const tpl = document.createElement('div');
-    tpl.className = 'nested-template';
-    
+    templates.forEach(templateName => {
+        const templateData = localStorage.getItem(`template_${templateName}`);
+        if (!templateData) {
+            const orphan = document.createElement('div');
+            orphan.className = 'nested-template';
+            orphan.textContent = `${templateName} (missing)`;
+            container.appendChild(orphan);
+            return;
+        }
 
-    // Start button
-tpl.querySelector('.nested-start').addEventListener('click', (e) => {
-    e.stopPropagation();
-    showWorkoutSession(templateName);
-});
+        const exercises = JSON.parse(templateData);
+        const tpl = document.createElement('div');
+        tpl.className = 'nested-template';
+        tpl.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <strong>${escapeHtml(templateName)}</strong>
+                    <div class="template-preview" style="font-size:13px;color:#666;">
+                        ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
+                    <button class="btn btn-danger btn-small nested-delete">🗑️</button>
+                </div>
+            </div>
+        `;
 
-// Delete button
-tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
-    e.stopPropagation();
-    deleteTemplateFromFolder(templateName, folderName);
-    showFolderContents(folderName, container);
-    renderFolders();
-    loadTemplates();
-});
+        // Start button
+        const startBtn = tpl.querySelector('.nested-start');
+        if (startBtn) {
+            startBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showWorkoutSession(templateName);
+            });
+        }
 
-// ✅ Tap anywhere else on the card to preview
-tpl.addEventListener('click', (e) => {
-    // Ignore clicks on the action buttons
-    if (e.target.closest('.nested-start') || e.target.closest('.nested-delete')) return;
-    showTemplatePreview(templateName);
-});
+        // Delete button
+        const deleteBtn = tpl.querySelector('.nested-delete');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteTemplateFromFolder(templateName, folderName);
+                showFolderContents(folderName, container);
+                renderFolders();
+                loadTemplates();
+            });
+        }
 
-// ✅ Long‑press anywhere on the card to remove from folder
-enableLongPress(tpl, () => {
-    deleteTemplateFromFolder(templateName, folderName);
-    showFolderContents(folderName, container);
-    renderFolders();
-    loadTemplates();
-});
+        // Tap to preview (ignore clicks on buttons)
+        tpl.addEventListener('click', (e) => {
+            if (e.target.closest('.nested-start') || e.target.closest('.nested-delete')) return;
+            showTemplatePreview(templateName);
+        });
 
+        // Long‑press to remove
+        enableLongPress(tpl, () => {
+            deleteTemplateFromFolder(templateName, folderName);
+            showFolderContents(folderName, container);
+            renderFolders();
+            loadTemplates();
+        });
 
-    // Tap to preview
-    tpl.addEventListener('click', () => showTemplatePreview(templateName));
-
-    container.appendChild(tpl);
-  });
+        container.appendChild(tpl);
+    });
 }
 
 function deleteTemplateFromFolder(templateName, folderName) {
