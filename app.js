@@ -615,32 +615,26 @@ function showFolderContents(folderName, container) {
   const folderKey = `folder_${folderName}`;
   const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
 
+  container.innerHTML = '';
+
   if (templates.length === 0) {
-    container.innerHTML = `<p style="color:#666; font-size:14px;">(No templates)</p>`;
+    container.innerHTML = `<p style="color:#666;">(No templates)</p>`;
     return;
   }
 
-  container.innerHTML = '';
   templates.forEach(templateName => {
     const templateData = localStorage.getItem(`template_${templateName}`);
-    if (!templateData) {
-      const orphan = document.createElement('div');
-      orphan.className = 'nested-template';
-      orphan.textContent = `${templateName} (missing)`;
-      container.appendChild(orphan);
-      return;
-    }
+    if (!templateData) return;
 
     const exercises = JSON.parse(templateData);
     const tpl = document.createElement('div');
-    tpl.className = 'nested-template';
-    tpl.draggable = true; // ✅ allow dragging out of folder
+    tpl.className = 'nested-template drop-draggable';
     tpl.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
           <strong>${escapeHtml(templateName)}</strong>
           <div class="template-preview" style="font-size:13px;color:#666;">
-            ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
+            ${exercises.length} exercises • ${exercises.reduce((s, ex) => s + ex.sets.length, 0)} sets
           </div>
         </div>
         <div style="display:flex;gap:8px;">
@@ -650,32 +644,26 @@ function showFolderContents(folderName, container) {
       </div>
     `;
 
-    if (isTouchDevice) {
-  enableTouchDrag(tpl, templateName, folderName);
-} else {
-  tpl.draggable = true;
-  tpl.addEventListener('dragstart', (e) => {
-    const payload = { templateName, fromFolder: folderName };
-    e.dataTransfer.setData('text/plain', JSON.stringify(payload));
-    e.dataTransfer.effectAllowed = 'move';
-  });
-}
-
-
-    // ✅ Make template draggable with info
+    // ✅ Desktop drag & drop
+    tpl.draggable = true;
     tpl.addEventListener('dragstart', (e) => {
       const payload = { templateName, fromFolder: folderName };
       e.dataTransfer.setData('text/plain', JSON.stringify(payload));
       e.dataTransfer.effectAllowed = 'move';
     });
 
-    // Start workout inside folder
+    // ✅ Mobile drag & drop
+    if (isTouchDevice) {
+      enableTouchDrag(tpl, templateName, folderName);
+    }
+
+    // Start button
     tpl.querySelector('.nested-start').addEventListener('click', (e) => {
       e.stopPropagation();
       showWorkoutSession(templateName);
     });
 
-    // Delete template from folder only
+    // Delete button
     tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
       e.stopPropagation();
       deleteTemplateFromFolder(templateName, folderName);
@@ -684,12 +672,13 @@ function showFolderContents(folderName, container) {
       loadTemplates();
     });
 
-    // Tap to preview template
+    // Tap to preview
     tpl.addEventListener('click', () => showTemplatePreview(templateName));
 
     container.appendChild(tpl);
   });
 }
+
 
 
 
