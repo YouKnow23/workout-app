@@ -76,7 +76,7 @@ function loadTemplates() {
     const grid = document.getElementById('templateGrid');
     grid.innerHTML = '';
 
-        // Add this once so the main grid can accept drops from folders
+    // Allow main grid to accept drops from folders
     grid.addEventListener('dragover', (e) => {
         e.preventDefault(); // allow drop
         e.dataTransfer.dropEffect = 'move';
@@ -86,24 +86,23 @@ function loadTemplates() {
         e.preventDefault();
         const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
 
-        if (data.fromFolder) {
-            // Remove from the folder it came from
-            deleteTemplateFromFolder(data.templateName, data.fromFolder);
+        if (data.fromFolder && data.templateName) {
+            const key = `template_${data.templateName}`;
+            const exists = localStorage.getItem(key);
 
-            // Refresh both views
-            loadTemplates();
-            renderFolders();
+            if (!exists) {
+                console.error(`Template "${data.templateName}" not found in storage`);
+                return; // stop before trying to render
+            }
+
+            deleteTemplateFromFolder(data.templateName, data.fromFolder);
+            loadTemplates();   // refresh main list
+            renderFolders();   // refresh folder list
         }
-        const templates = getStoredTemplates(); // existing helper in your file
-            templates.forEach(template => {
-        const card = createTemplateCard(template);
-        grid.appendChild(card);
     });
 
-    });  
-
-    
-
+    // ✅ Normal rendering happens here, outside the drop handler
+    const templates = getStoredTemplates();
     templates.forEach(template => {
         const card = createTemplateCard(template);
         grid.appendChild(card);
