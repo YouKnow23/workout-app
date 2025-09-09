@@ -713,6 +713,13 @@ body {
     box-shadow: none;
 }
 
+.saved-template .delete-btn {
+    position: static !important;
+    transform: none !important;
+    margin: 0;
+}
+
+
 /* Mobile-specific styling for swipe-to-delete on folders */
 @media only screen and (max-width: 768px) {
   .folder-card {
@@ -737,6 +744,14 @@ body {
 
   .folder-card.swiped .delete-btn {
     right: 0; /* slide in when swiped */
+  }
+
+  .save-template .delete-btn {
+    position: static !important;
+    transform: none !important;
+    margin: 0;
+
+
   }
 }
 
