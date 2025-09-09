@@ -125,7 +125,7 @@ function loadTemplates() {
       // ✅ Restore to saved templates
       const templateKey = `template_${data.templateName}`;
       if (!localStorage.getItem(templateKey)) {
-        localStorage.setItem(templateKey, JSON.stringify({ name: data.templateName }));
+        localStorage.setItem(templateKey, JSON.stringify({ name: data.templateName, exercises: [] }));
       }
 
       loadTemplates();
@@ -197,7 +197,7 @@ function createTemplateCard(template) {
     // Dragstart from handle: set template name in dataTransfer and show card as drag image (if supported)
     handle.addEventListener('dragstart', (e) => {
     const payload = { templateName: template.name };
-    e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+    e.dataTransfer.setData('text/plain', JSON.stringify({templateName: template.name}));
     try { e.dataTransfer.setDragImage(card, 10, 10); } catch (err) {}
     e.dataTransfer.effectAllowed = 'move';
     });
@@ -241,6 +241,20 @@ card.addEventListener('click', (e) => {
 });
 
     return card;
+}
+
+function moveTemplateToFolder(templateName, folderName) {
+  const folderKey = `folder_${folderName}`;
+  const folderTemplates = JSON.parse(localStorage.getItem(folderKey) || '[]');
+
+  if (!folderTemplates.includes(templateName)) {
+    folderTemplates.push(templateName);
+    localStorage.setItem(folderKey, JSON.stringify(folderTemplates));
+  }
+
+  // Remove from saved templates
+  const templateKey = `template_${templateName}`;
+  localStorage.removeItem(templateKey);
 }
 
 
