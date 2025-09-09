@@ -265,10 +265,9 @@ function moveTemplateToFolder(templateName, folderName) {
     localStorage.setItem(folderKey, JSON.stringify(folderTemplates));
   }
 
-  // Remove from saved templates
-  const templateKey = `template_${templateName}`;
-  localStorage.removeItem(templateKey);
+
 }
+
 
 
 
