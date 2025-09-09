@@ -697,6 +697,16 @@ function renderFolders() {
     });
 }
 
+function createTemplateCardByName(name, folderName) {
+  // Build a minimal template object for rendering
+  const template = { name, exercises: [] };
+
+  // Pass folderName so dragstart can include fromFolder info
+  const card = createTemplateCard(template, folderName);
+
+  return card;
+}
+
 function showFolderContents(folderName, container) {
     const folderKey = `folder_${folderName}`;
     const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
@@ -709,7 +719,7 @@ function showFolderContents(folderName, container) {
     }
 
     templates.forEach(templateName => {
-        const tpl = createTemplateCardByName(templateName);
+        const tpl = createTemplateCardByName(templateName,folderName);
 
         tpl.draggable = true;
         tpl.addEventListener('dragstart', (e) => {
