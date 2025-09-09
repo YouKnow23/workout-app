@@ -415,6 +415,18 @@ function createFolderCard(name) {
     deleteFolder(name);
   });
 
+  // ✅ Click to toggle folder contents
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.nested-delete')) return; // ignore delete clicks
+
+    if (contents.style.display === 'block') {
+      contents.style.display = 'none';
+    } else {
+      showFolderContents(name, contents);
+      contents.style.display = 'block';
+    }
+  });
+
   // ✅ Drop target logic — allow templates to be dropped into folder
   card.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -701,10 +713,8 @@ function createTemplateCardByName(name, folderName) {
   // Build a minimal template object for rendering
   const template = { name, exercises: [] };
 
-  // Pass folderName so dragstart can include fromFolder info
-  const card = createTemplateCard(template, folderName);
-
-  return card;
+  // Pass folderName so drag logic knows where it came from
+  return createTemplateCard(template, folderName);
 }
 
 function showFolderContents(folderName, container) {
