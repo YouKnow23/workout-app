@@ -526,30 +526,60 @@ function renderFolders() {
   });
 }
 
-function moveTemplateToFolder(templateName, folderName) {
-  const templateKey = `template_${templateName}`;
-  const templateData = localStorage.getItem(templateKey);
-  if (!templateData) {
-    showNotification('Template not found.', 'error');
-    return;
-  }
+function showFolderContents(folderName, container) {
+    const folderKey = `folder_${folderName}`;
+    const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
 
-  const folderKey = `folder_${folderName}`;
-  const folder = JSON.parse(localStorage.getItem(folderKey) || '[]');
+    container.innerHTML = '';
 
-  if (!folder.includes(templateName)) {
-    folder.push(templateName);
-    localStorage.setItem(folderKey, JSON.stringify(folder));
-  }
+    if (templates.length === 0) {
+        container.innerHTML = `<p style="color:#666;">(No templates)</p>`;
+        return;
+    }
 
-  // ⚠️ Do NOT remove template data anymore!
-  // localStorage.removeItem(templateKey); ← remove this line
+    templates.forEach(templateName => {
+        const templateData = localStorage.getItem(`template_${templateName}`);
+        if (!templateData) {
+            const orphan = document.createElement('div');
+            orphan.textContent = `${templateName} (missing)`;
+            container.appendChild(orphan);
+            return;
+        }
 
-  showNotification(`Moved "${templateName}" to ${folderName}`);
-  loadTemplates();   // refresh main list
-  renderFolders();   // refresh folder list
+        const exercises = JSON.parse(templateData);
+        const tpl = document.createElement('div');
+        tpl.className = 'nested-template';
+        tpl.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <strong>${templateName}</strong>
+                    <div class="template-preview" style="font-size:13px;color:#666;">
+                        ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
+                    <button class="btn btn-danger btn-small nested-delete">🗑️</button>
+                </div>
+            </div>
+        `;
+
+        tpl.querySelector('.nested-start').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showWorkoutSession(templateName);
+        });
+
+        tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteTemplateFromFolder(templateName, folderName);
+            showFolderContents(folderName, container);
+            renderFolders();
+            loadTemplates();
+        });
+
+        container.appendChild(tpl);
+    });
 }
-
 function enableLongPress(card, callback, delay = 600) {
   let pressTimer;
 
