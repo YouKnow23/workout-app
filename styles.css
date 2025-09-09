@@ -9,11 +9,34 @@ body {
 }
 
 .container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
   padding: 1rem;
+  background: #4F46E5;
+  color: #fff;
+  text-align: center;
 }
 
 h2, h3 {
   margin: 0;
+}
+
+/* =========================
+   Page Layout
+   ========================= */
+.page {
+  flex: 1;
+  padding: 1rem;
+}
+
+.page-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 /* =========================
@@ -57,8 +80,6 @@ h2, h3 {
 /* =========================
    Swipe-to-Delete (Folders)
    ========================= */
-/* Base delete button hidden off-screen */
-.folder-card .delete-btn,
 .folder-card .nested-delete {
   position: absolute;
   right: -80px;
@@ -76,8 +97,6 @@ h2, h3 {
   transition: right 0.3s ease;
 }
 
-/* Show delete when swiped */
-.folder-card.swiped .delete-btn,
 .folder-card.swiped .nested-delete {
   right: 0;
 }
@@ -136,12 +155,29 @@ h2, h3 {
 }
 
 /* =========================
-   Page Navigation
+   Bottom Navigation
    ========================= */
-.page-nav {
+.bottom-nav {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  justify-content: space-around;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.bottom-nav-btn {
+  flex: 1;
+  padding: 0.5rem;
+  text-align: center;
+  border: none;
+  background: none;
+}
+
+.bottom-nav-btn.active {
+  background: #f0f0f0;
 }
 
 /* =========================
