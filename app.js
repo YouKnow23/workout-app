@@ -365,43 +365,34 @@ function createFolderTemplateCard(template, folderName) {
 
 
 function createFolderCard(name) {
-  const card = document.createElement('div');
-  card.className = 'template-card folder-card';
-  card.dataset.folderName = name;
+    const card = document.createElement('div');
+    card.className = 'template-card folder-card';
+    card.dataset.folderName = name;
 
-  card.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h3>📁 ${escapeHtml(name)}</h3>
-      <div class="delete-btn">Delete</div>
-    </div>
-    <div class="folder-contents" style="display:none;"></div>
-  `;
+    card.innerHTML = `
+        <div class="folder-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h3>📁 ${escapeHtml(name)}</h3>
+            <button class="nested-delete">Delete</button>
+        </div>
+        <div class="folder-contents" style="display:none;"></div>
+    `;
 
-  const delBtn = card.querySelector('.delete-btn');
-  const contents = card.querySelector('.folder-contents');
+    const delBtn = card.querySelector('.nested-delete');
 
-  // Toggle folder contents open/close
-  card.addEventListener('click', (e) => {
-    if (e.target.classList.contains('delete-btn')) return; // don’t open/close when delete is tapped
-    contents.style.display = contents.style.display === 'block' ? 'none' : 'block';
-    if (contents.style.display === 'block') {
-      showFolderContents(name, contents);
-    }
-  });
+    // Delete button click
+    delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteFolder(name);
+    });
 
-  // Delete button (only shows on swipe)
-  delBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    deleteFolder(name);
-  });
+    // Enable swipe-to-delete for mobile
+    enableSwipeToDelete(card, name, () => {
+        deleteFolder(name);
+    });
 
-  // Enable swipe-to-delete for mobile
-  enableSwipeToDelete(card, name);
+    card.classList.add('dropzone');
 
-  card.classList.add('dropzone');
-
-
-  return card;
+    return card;
 }
 
 function enableTouchDrag(element, templateName, fromFolder = null) {
@@ -647,13 +638,12 @@ function renderFolders() {
     }
 
     folders.forEach(name => {
-        const folderDiv = createFolderCard(name); // your folder card element
+        const folderDiv = createFolderCard(name); // must include a .folder-contents div inside
 
         // ✅ Prevent clicks on delete/start buttons from opening the folder
         folderDiv.addEventListener('click', (e) => {
             if (e.target.closest('.nested-delete') || e.target.closest('.nested-start')) return;
 
-            // Open folder contents
             const contentsContainer = folderDiv.querySelector('.folder-contents');
             if (contentsContainer) {
                 showFolderContents(name, contentsContainer);
@@ -676,49 +666,20 @@ function showFolderContents(folderName, container) {
     }
 
     templates.forEach(templateName => {
-        const templateData = localStorage.getItem(`template_${templateName}`);
-        if (!templateData) {
-            const orphan = document.createElement('div');
-            orphan.textContent = `${templateName} (missing)`;
-            container.appendChild(orphan);
-            return;
-        }
+        const tpl = createTemplateCardByName(templateName); // builds card from storage key
 
-        const exercises = JSON.parse(templateData);
-        const tpl = document.createElement('div');
-        tpl.className = 'nested-template';
-        tpl.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                    <strong>${templateName}</strong>
-                    <div class="template-preview" style="font-size:13px;color:#666;">
-                        ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
-                    </div>
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
-                    <button class="btn btn-danger btn-small nested-delete">🗑️</button>
-                </div>
-            </div>
-        `;
-
-        // ✅ Make draggable so it can be dragged out of the folder
+        // ✅ Make draggable so it can be dropped back into main grid
         tpl.draggable = true;
         tpl.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('text/plain', JSON.stringify({
-                templateName,
+                templateName: templateName,
                 fromFolder: folderName
             }));
             e.dataTransfer.effectAllowed = 'move';
         });
 
-        tpl.querySelector('.nested-start').addEventListener('click', (e) => {
-            e.stopPropagation();
-            showWorkoutSession(templateName);
-        });
-
-        tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
-            e.stopPropagation();
+        // ✅ Enable swipe-to-delete reveal
+        enableSwipeToDelete(tpl, folderName, () => {
             deleteTemplateFromFolder(templateName, folderName);
             showFolderContents(folderName, container);
             renderFolders();
@@ -728,6 +689,7 @@ function showFolderContents(folderName, container) {
         container.appendChild(tpl);
     });
 }
+
 function enableLongPress(card, callback, delay = 600) {
   let pressTimer;
 
