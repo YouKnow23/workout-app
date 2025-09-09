@@ -6,10 +6,44 @@ let exerciseCounter = 0;
 
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', () => {
-    loadTemplates();
-    renderFolders();
-    showMainMenu();
+document.addEventListener("DOMContentLoaded", () => {
+  const grid = document.getElementById('templateGrid');
+
+  if (grid) {
+    // Highlight grid when dragging over it
+    grid.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      grid.classList.add('dragover');
+    });
+
+    grid.addEventListener('dragleave', () => {
+      grid.classList.remove('dragover');
+    });
+
+    // Drop directly on grid
+    grid.addEventListener('drop', (e) => {
+      e.preventDefault();
+      grid.classList.remove('dragover');
+
+      const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+      if (data.fromFolder && data.templateName) {
+        restoreTemplateFromFolder(data.templateName, data.fromFolder);
+      }
+    });
+  }
+
+  // Global fallback — drop outside folders
+  document.addEventListener('drop', (e) => {
+    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+    if (data.fromFolder && data.templateName && !e.target.closest('.folder-card')) {
+      restoreTemplateFromFolder(data.templateName, data.fromFolder);
+    }
+  });
+
+  // Initial render
+  loadTemplates();
+  renderFolders();
 });
 
 // 🔹 Setup drop target for Saved Templates grid
@@ -102,42 +136,6 @@ function loadTemplates() {
   const grid = document.getElementById('templateGrid');
   grid.innerHTML = '';
 
-  // Highlight grid when dragging over it
-  grid.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    grid.classList.add('dragover');
-  });
-
-  grid.addEventListener('dragleave', () => {
-    grid.classList.remove('dragover');
-  });
-
-  // Drop directly on grid
-  grid.addEventListener('drop', (e) => {
-    e.preventDefault();
-    grid.classList.remove('dragover');
-
-    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
-    if (data.fromFolder && data.templateName) {
-      restoreTemplateFromFolder(data.templateName, data.fromFolder);
-    }
-  });
-
-  // 🔹 Global drop fallback — anywhere outside a folder
-  document.addEventListener('dragover', (e) => {
-    e.preventDefault();
-  });
-
-  document.addEventListener('drop', (e) => {
-    e.preventDefault();
-
-    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
-    if (data.fromFolder && data.templateName && !e.target.closest('.folder-card')) {
-      restoreTemplateFromFolder(data.templateName, data.fromFolder);
-    }
-  });
-
   // Render all top-level templates
   const templates = getStoredTemplates();
   templates.forEach(template => {
@@ -146,26 +144,14 @@ function loadTemplates() {
   });
 }
 
+
 function restoreTemplateFromFolder(templateName, folderName) {
-  // 1️⃣ Remove from folder
-  deleteTemplateFromFolder(templateName, folderName);
-
-  // 2️⃣ Save back to top-level templates
-  localStorage.setItem(`template_${templateName}`, JSON.stringify({
-    name: templateName,
-    exercises: [] // keep structure consistent
-  }));
-
-  // 3️⃣ Refresh UI
-  renderFolders();
-  loadTemplates();
-
-  const templates = getStoredTemplates();
-  templates.forEach(template => {
-    const card = createTemplateCard(template);
-    grid.appendChild(card);
-  });
+  deleteTemplateFromFolder(templateName, folderName); // just removes it from that folder’s list
+  loadTemplates();   // re-render Saved Templates
+  renderFolders();   // re-render folders
+  showNotification(`Moved "${templateName}" back to Saved Templates`);
 }
+
 
 
 // Clean createTemplateCard: small drag handle for dragging, tap/press -> preview, buttons hook into existing functions
