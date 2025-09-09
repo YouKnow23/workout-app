@@ -451,30 +451,35 @@ function showFolderContents(folderName, container) {
     tpl.className = 'nested-template';
     
 
-    // Start workout inside folder
-    tpl.querySelector('.nested-start').addEventListener('click', (e) => {
-      e.stopPropagation();
-      showWorkoutSession(templateName);
-    });
+    // Start button
+tpl.querySelector('.nested-start').addEventListener('click', (e) => {
+    e.stopPropagation();
+    showWorkoutSession(templateName);
+});
 
-    // Delete template from folder only (not from storage)
-    tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteTemplateFromFolder(templateName, folderName);
-      showFolderContents(folderName, container);
-      renderFolders();
-      loadTemplates();
-    });
+// Delete button
+tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteTemplateFromFolder(templateName, folderName);
+    showFolderContents(folderName, container);
+    renderFolders();
+    loadTemplates();
+});
 
-    // Long‑press to remove from folder
-    enableLongPress(tpl, (e) => {
-      e.stopPropagation();  
-      deleteTemplateFromFolder(templateName, folderName);
-      showFolderContents(folderName, container); // refresh folder view
-      renderFolders();                            // refresh folder list
-      loadTemplates();                            // refresh main list
-    });
+// ✅ Tap anywhere else on the card to preview
+tpl.addEventListener('click', (e) => {
+    // Ignore clicks on the action buttons
+    if (e.target.closest('.nested-start') || e.target.closest('.nested-delete')) return;
+    showTemplatePreview(templateName);
+});
 
+// ✅ Long‑press anywhere on the card to remove from folder
+enableLongPress(tpl, () => {
+    deleteTemplateFromFolder(templateName, folderName);
+    showFolderContents(folderName, container);
+    renderFolders();
+    loadTemplates();
+});
 
 
     // Tap to preview
