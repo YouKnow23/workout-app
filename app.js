@@ -12,6 +12,32 @@ document.addEventListener('DOMContentLoaded', () => {
     showMainMenu();
 });
 
+// 🔹 Setup drop target for Saved Templates grid
+document.addEventListener("DOMContentLoaded", () => {
+  const templateGrid = document.getElementById('templateGrid');
+  if (templateGrid) {
+    templateGrid.addEventListener('dragover', (e) => {
+      e.preventDefault(); // allow drop
+      e.dataTransfer.dropEffect = 'move';
+    });
+
+    templateGrid.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+
+      if (data.fromFolder && data.templateName) {
+        // Remove from that folder
+        deleteTemplateFromFolder(data.templateName, data.fromFolder);
+
+        // Refresh UI
+        loadTemplates();
+        renderFolders();
+        showNotification(`Moved "${data.templateName}" back to Saved Templates`);
+      }
+    });
+  }
+});
+
 // Navigation functions
 function showMainMenu() {
     hideAllPages();
@@ -73,41 +99,16 @@ function updateBottomNav(activeTab) {
 
 // Template management
 function loadTemplates() {
-    const grid = document.getElementById('templateGrid');
-    grid.innerHTML = '';
+  const grid = document.getElementById('templateGrid');
+  grid.innerHTML = '';
 
-    // Allow main grid to accept drops from folders
-    grid.addEventListener('dragover', (e) => {
-        e.preventDefault(); // allow drop
-        e.dataTransfer.dropEffect = 'move';
-    });
-
-    grid.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
-
-        if (data.fromFolder && data.templateName) {
-            const key = `template_${data.templateName}`;
-            const exists = localStorage.getItem(key);
-
-            if (!exists) {
-                console.error(`Template "${data.templateName}" not found in storage`);
-                return; // stop before trying to render
-            }
-
-            deleteTemplateFromFolder(data.templateName, data.fromFolder);
-            loadTemplates();   // refresh main list
-            renderFolders();   // refresh folder list
-        }
-    });
-
-    // ✅ Normal rendering happens here, outside the drop handler
-    const templates = getStoredTemplates();
-    templates.forEach(template => {
-        const card = createTemplateCard(template);
-        grid.appendChild(card);
-    });
+  const templates = getStoredTemplates();
+  templates.forEach(template => {
+    const card = createTemplateCard(template);
+    grid.appendChild(card);
+  });
 }
+
 
 // Clean createTemplateCard: small drag handle for dragging, tap/press -> preview, buttons hook into existing functions
 // Escape HTML helper (safe rendering of template/folder names)
@@ -343,9 +344,7 @@ function createFolderTemplateCard(template, folderName) {
 function createFolderCard(name) {
   const card = document.createElement('div');
   card.className = 'template-card folder-card';
-  card.classList.remove('show-delete'); // ensure delete is hidden initially
   card.dataset.folderName = name;
-
 
   card.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -360,42 +359,107 @@ function createFolderCard(name) {
 
   // Toggle folder contents open/close
   card.addEventListener('click', (e) => {
-    if (e.target === delBtn) return; // skip delete click
+    if (e.target.classList.contains('delete-btn')) return; // don’t open/close when delete is tapped
+    contents.style.display = contents.style.display === 'block' ? 'none' : 'block';
     if (contents.style.display === 'block') {
-      contents.style.display = 'none';
-    } else {
-      contents.style.display = 'block';
       showFolderContents(name, contents);
     }
   });
 
-  // Delete button (swipe to reveal on mobile)
+  // Delete button (only shows on swipe)
   delBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     deleteFolder(name);
   });
 
-  // Enable swipe-to-delete gesture
+  // Enable swipe-to-delete for mobile
   enableSwipeToDelete(card, name);
 
-  card.addEventListener('dragover', (e) => {
-    e.preventDefault(); // allow drop
-    card.classList.add('folder-dropzone');
-  });
-  card.addEventListener('dragleave', () => {
-    card.classList.remove('folder-dropzone');
-  });
-  card.addEventListener('drop', (e) => {
-    e.preventDefault();
-    card.classList.remove('folder-dropzone');
-    const templateName = e.dataTransfer.getData('text/plain');
-    if (templateName) {
-      moveTemplateToFolder(templateName, name);
-    }
-  });
+  card.classList.add('dropzone');
 
 
   return card;
+}
+
+function enableTouchDrag(element, templateName, fromFolder = null) {
+  let startX, startY, dragging = false, dragEl;
+
+  element.addEventListener('touchstart', (e) => {
+    if (e.target.tagName === 'BUTTON') return; // don’t trigger when pressing buttons
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+
+    dragging = true;
+
+    // create ghost element
+    dragEl = element.cloneNode(true);
+    dragEl.style.position = 'fixed';
+    dragEl.style.left = `${startX}px`;
+    dragEl.style.top = `${startY}px`;
+    dragEl.style.opacity = '0.7';
+    dragEl.style.pointerEvents = 'none';
+    dragEl.style.zIndex = 9999;
+    document.body.appendChild(dragEl);
+  });
+
+  element.addEventListener('touchmove', (e) => {
+    if (!dragging || !dragEl) return;
+    const touch = e.touches[0];
+    dragEl.style.left = `${touch.clientX - 50}px`;
+    dragEl.style.top = `${touch.clientY - 30}px`;
+
+    // highlight drop zones
+    document.querySelectorAll('.dropzone').forEach(zone => {
+      const rect = zone.getBoundingClientRect();
+      if (
+        touch.clientX > rect.left &&
+        touch.clientX < rect.right &&
+        touch.clientY > rect.top &&
+        touch.clientY < rect.bottom
+      ) {
+        zone.classList.add('highlight-drop');
+      } else {
+        zone.classList.remove('highlight-drop');
+      }
+    });
+  });
+
+  element.addEventListener('touchend', (e) => {
+    if (!dragging || !dragEl) return;
+    dragging = false;
+
+    const touch = e.changedTouches[0];
+    let dropped = false;
+
+    document.querySelectorAll('.dropzone').forEach(zone => {
+      const rect = zone.getBoundingClientRect();
+      if (
+        touch.clientX > rect.left &&
+        touch.clientX < rect.right &&
+        touch.clientY > rect.top &&
+        touch.clientY < rect.bottom
+      ) {
+        dropped = true;
+        if (zone.id === 'templateGrid') {
+          // move back to saved templates
+          deleteTemplateFromFolder(templateName, fromFolder);
+          loadTemplates();
+          renderFolders();
+          showNotification(`Moved "${templateName}" back to Saved Templates`);
+        } else if (zone.classList.contains('folder-card')) {
+          const folderName = zone.dataset.folderName;
+          moveTemplateToFolder(templateName, folderName);
+          loadTemplates();
+          renderFolders();
+          showNotification(`Moved "${templateName}" into "${folderName}"`);
+        }
+      }
+    });
+
+    dragEl.remove();
+    document.querySelectorAll('.dropzone').forEach(zone => zone.classList.remove('highlight-drop'));
+  });
 }
 
     // swipe to reveal delete (mobile)
@@ -442,82 +506,86 @@ function enableSwipeToDelete(card, folderName, onDelete) {
 }
 
 function showFolderContents(folderName, container) {
-    const folderKey = `folder_${folderName}`;
-    const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
+  const folderKey = `folder_${folderName}`;
+  const templates = JSON.parse(localStorage.getItem(folderKey) || '[]');
 
-    container.innerHTML = '';
+  if (templates.length === 0) {
+    container.innerHTML = `<p style="color:#666; font-size:14px;">(No templates)</p>`;
+    return;
+  }
 
-    if (templates.length === 0) {
-        container.innerHTML = `<p style="color:#666;">(No templates)</p>`;
-        return;
+  container.innerHTML = '';
+  templates.forEach(templateName => {
+    const templateData = localStorage.getItem(`template_${templateName}`);
+    if (!templateData) {
+      const orphan = document.createElement('div');
+      orphan.className = 'nested-template';
+      orphan.textContent = `${templateName} (missing)`;
+      container.appendChild(orphan);
+      return;
     }
 
-    templates.forEach(templateName => {
-        const templateData = localStorage.getItem(`template_${templateName}`);
-        if (!templateData) {
-            const orphan = document.createElement('div');
-            orphan.className = 'nested-template';
-            orphan.textContent = `${templateName} (missing)`;
-            container.appendChild(orphan);
-            return;
-        }
+    const exercises = JSON.parse(templateData);
+    const tpl = document.createElement('div');
+    tpl.className = 'nested-template';
+    tpl.draggable = true; // ✅ allow dragging out of folder
+    tpl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>${escapeHtml(templateName)}</strong>
+          <div class="template-preview" style="font-size:13px;color:#666;">
+            ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
+          <button class="btn btn-danger btn-small nested-delete">🗑️ Delete</button>
+        </div>
+      </div>
+    `;
 
-        const exercises = JSON.parse(templateData);
-        const tpl = document.createElement('div');
-        tpl.className = 'nested-template';
-        tpl.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                    <strong>${escapeHtml(templateName)}</strong>
-                    <div class="template-preview" style="font-size:13px;color:#666;">
-                        ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
-                    </div>
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn btn-primary btn-small nested-start">▶️ Start</button>
-                    <button class="btn btn-danger btn-small nested-delete">🗑️</button>
-                </div>
-            </div>
-        `;
-
-        // Start button
-        const startBtn = tpl.querySelector('.nested-start');
-        if (startBtn) {
-            startBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showWorkoutSession(templateName);
-            });
-        }
-
-        // Delete button
-        const deleteBtn = tpl.querySelector('.nested-delete');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteTemplateFromFolder(templateName, folderName);
-                showFolderContents(folderName, container);
-                renderFolders();
-                loadTemplates();
-            });
-        }
-
-        // Tap to preview (ignore clicks on buttons)
-        tpl.addEventListener('click', (e) => {
-            if (e.target.closest('.nested-start') || e.target.closest('.nested-delete')) return;
-            showTemplatePreview(templateName);
-        });
-
-        // Long‑press to remove
-        enableLongPress(tpl, () => {
-            deleteTemplateFromFolder(templateName, folderName);
-            showFolderContents(folderName, container);
-            renderFolders();
-            loadTemplates();
-        });
-
-        container.appendChild(tpl);
-    });
+    if (isTouchDevice) {
+  enableTouchDrag(tpl, templateName, folderName);
+} else {
+  tpl.draggable = true;
+  tpl.addEventListener('dragstart', (e) => {
+    const payload = { templateName, fromFolder: folderName };
+    e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+    e.dataTransfer.effectAllowed = 'move';
+  });
 }
+
+
+    // ✅ Make template draggable with info
+    tpl.addEventListener('dragstart', (e) => {
+      const payload = { templateName, fromFolder: folderName };
+      e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    // Start workout inside folder
+    tpl.querySelector('.nested-start').addEventListener('click', (e) => {
+      e.stopPropagation();
+      showWorkoutSession(templateName);
+    });
+
+    // Delete template from folder only
+    tpl.querySelector('.nested-delete').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteTemplateFromFolder(templateName, folderName);
+      showFolderContents(folderName, container);
+      renderFolders();
+      loadTemplates();
+    });
+
+    // Tap to preview template
+    tpl.addEventListener('click', () => showTemplatePreview(templateName));
+
+    container.appendChild(tpl);
+  });
+}
+
+
 
 function deleteTemplateFromFolder(templateName, folderName) {
   const folderKey = `folder_${folderName}`;
