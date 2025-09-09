@@ -146,13 +146,38 @@ function loadTemplates() {
 
 
 function restoreTemplateFromFolder(templateName, folderName) {
-  deleteTemplateFromFolder(templateName, folderName); // just removes it from that folder’s list
-  loadTemplates();   // re-render Saved Templates
-  renderFolders();   // re-render folders
+  // 1. Get template data
+  const templateData = localStorage.getItem(`template_${templateName}`);
+
+  // 2. If missing, try to pull from folder reference
+  if (!templateData) {
+    const folderTemplates = JSON.parse(localStorage.getItem(`folder_${folderName}`) || '[]');
+    if (folderTemplates.includes(templateName)) {
+      // If it exists in the folder, just leave the data alone
+    } else {
+      showNotification(`Template "${templateName}" not found in folder`, 'error');
+      return;
+    }
+  }
+
+  // 3. Remove from folder
+  deleteTemplateFromFolder(templateName, folderName);
+
+  // 4. Ensure template is in Saved Templates
+  // (basically make sure template_{name} exists)
+  // No need to rewrite if it's already stored as template_ key
+  if (!localStorage.getItem(`template_${templateName}`) && templateData) {
+    localStorage.setItem(`template_${templateName}`, templateData);
+  }
+
+  // 5. Refresh UI
+  loadTemplates();
+  renderFolders();
   showNotification(`Moved "${templateName}" back to Saved Templates`);
 }
 
 
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 // Clean createTemplateCard: small drag handle for dragging, tap/press -> preview, buttons hook into existing functions
 // Escape HTML helper (safe rendering of template/folder names)
