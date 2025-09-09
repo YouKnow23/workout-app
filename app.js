@@ -147,16 +147,16 @@ function loadTemplates() {
 }
 
 function restoreTemplateFromFolder(templateName, folderName) {
-  // Remove from folder
+  // 1️⃣ Remove from folder
   deleteTemplateFromFolder(templateName, folderName);
 
-  // Restore to saved templates
+  // 2️⃣ Save back to top-level templates
   localStorage.setItem(`template_${templateName}`, JSON.stringify({
     name: templateName,
     exercises: [] // keep structure consistent
   }));
 
-  // Refresh UI
+  // 3️⃣ Refresh UI
   renderFolders();
   loadTemplates();
 
