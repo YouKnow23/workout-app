@@ -84,6 +84,26 @@ function init() {
     if (data.fromFolder && data.templateName && !e.target.closest('.folder-card')) {
       restoreTemplateFromFolder(data.templateName, data.fromFolder);
     }
+
+    document.addEventListener('dragover', (e) => {
+  e.preventDefault();
+});
+
+document.addEventListener('drop', (e) => {
+  e.preventDefault();
+
+  const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+
+  if (
+    data &&
+    typeof data.templateName === 'string' &&
+    data.templateName.trim() !== '' &&
+    data.fromFolder &&
+    !e.target.closest('.folder-card')
+  ) {
+    restoreTemplateFromFolder(data.templateName, data.fromFolder);
+  }
+});
   });
 
   // Initial render
@@ -158,12 +178,41 @@ function loadTemplates() {
   const grid = document.getElementById('templateGrid');
   grid.innerHTML = '';
 
+  // Allow dropping directly on the Saved Templates grid
+  grid.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    grid.classList.add('dragover');
+  });
+
+  grid.addEventListener('dragleave', () => {
+    grid.classList.remove('dragover');
+  });
+
+  grid.addEventListener('drop', (e) => {
+    e.preventDefault();
+    grid.classList.remove('dragover');
+
+    const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+
+    // ✅ Stricter check so only valid templates from folders are restored
+    if (
+      data &&
+      typeof data.templateName === 'string' &&
+      data.templateName.trim() !== '' &&
+      data.fromFolder
+    ) {
+      restoreTemplateFromFolder(data.templateName, data.fromFolder);
+    }
+  });
+
   // Render all top-level templates
   const templates = getStoredTemplates();
-   if (templates.length === 0) {
+  if (templates.length === 0) {
     grid.innerHTML = `<p style="color:#aaa; text-align:center;">No templates saved yet</p>`;
     return;
   }
+
   templates.forEach(template => {
     const card = createTemplateCard(template);
     grid.appendChild(card);
