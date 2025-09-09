@@ -110,6 +110,7 @@ function createTemplateCard(template) {
 
     const card = document.createElement('div');
     card.className = 'template-card';
+    card.classList.add('saved-template');
     card.dataset.templateName = template.name;
 
     // handle (only for drag)
@@ -448,20 +449,7 @@ function showFolderContents(folderName, container) {
     const exercises = JSON.parse(templateData);
     const tpl = document.createElement('div');
     tpl.className = 'nested-template';
-    tpl.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <strong>${escapeHtml(templateName)}</strong>
-          <div class="template-preview" style="font-size:13px;color:#666;">
-            ${exercises.length} exercises • ${exercises.reduce((s,ex)=>s+ex.sets.length,0)} sets
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-small saved-start>▶️ Start</button>
-          <button class="btn btn-danger btn-small delete-btn>🗑️</button>
-        </div>
-      </div>
-    `;
+    
 
     // Start workout inside folder
     tpl.querySelector('.nested-start').addEventListener('click', (e) => {
