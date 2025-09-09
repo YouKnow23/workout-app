@@ -719,6 +719,20 @@ body {
     margin: 0;
 }
 
+.folder-card .delete-btn {
+  display: none; /* hidden by default */
+}
+
+.folder-card.swiped .delete-btn {
+  display: flex; /* only show when swiped left */
+}
+
+.dropzone.highlight-drop {
+  outline: 3px dashed #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+
 
 /* Mobile-specific styling for swipe-to-delete on folders */
 @media only screen and (max-width: 768px) {
@@ -754,13 +768,6 @@ body {
 
   }
 
-.nested-delete {
-    display: none;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-}
 
-.nested-template.swiped .nested-delete {
-    display: inline-block;
-}
 
 }
