@@ -76,17 +76,30 @@ function loadTemplates() {
     const grid = document.getElementById('templateGrid');
     grid.innerHTML = '';
 
+        // Add this once so the main grid can accept drops from folders
+    grid.addEventListener('dragover', (e) => {
+        e.preventDefault(); // allow drop
+        e.dataTransfer.dropEffect = 'move';
+    });
+
+    grid.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+
+        if (data.fromFolder) {
+            // Remove from the folder it came from
+            deleteTemplateFromFolder(data.templateName, data.fromFolder);
+
+            // Refresh both views
+            loadTemplates();
+            renderFolders();
+        }
+    });
+
+
     const templates = getStoredTemplates(); // existing helper in your file
 
-    if (templates.length === 0) {
-        grid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; color: white; padding: 40px;">
-                <h3>No templates yet!</h3>
-                <p>Create your first workout template to get started.</p>
-            </div>
-        `;
-        return;
-    }
+    
 
     templates.forEach(template => {
         const card = createTemplateCard(template);
@@ -535,15 +548,24 @@ function renderFolders() {
 
   const folders = JSON.parse(localStorage.getItem('folders') || '[]');
 
-  if (folders.length === 0) {
-    grid.innerHTML = `<p style="color:#aaa; text-align:center;">No folders yet</p>`;
-    return;
-  }
-
+ 
   folders.forEach(name => {
-    const card = createFolderCard(name);
-    grid.appendChild(card);
-  });
+        const folderDiv = createFolderCard(name); // this is your folder card element
+
+        // Prevent clicks on nested-delete or nested-start from triggering folder open
+        folderDiv.addEventListener('click', (e) => {
+            if (e.target.closest('.nested-delete') || e.target.closest('.nested-start')) return;
+
+            // open folder logic here
+            const contentsContainer = folderDiv.querySelector('.folder-contents');
+            if (contentsContainer) {
+                showFolderContents(name, contentsContainer);
+            }
+        });
+
+        grid.appendChild(folderDiv);
+    });
+
 }
 
 function showFolderContents(folderName, container) {
