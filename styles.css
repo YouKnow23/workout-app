@@ -713,6 +713,15 @@ body {
     box-shadow: none;
 }
 
+.nested-delete {
+    display: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.nested-template.swiped .nested-delete {
+    display: inline-block;
+}
+
 .saved-template .delete-btn {
     position: static !important;
     transform: none !important;
