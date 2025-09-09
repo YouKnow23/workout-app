@@ -370,7 +370,7 @@ function createFolderCard(name) {
     card.dataset.folderName = name;
 
     card.innerHTML = `
-        <div class="folder-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="folder-header">
             <h3>📁 ${escapeHtml(name)}</h3>
             <button class="nested-delete">Delete</button>
         </div>
@@ -378,20 +378,17 @@ function createFolderCard(name) {
     `;
 
     const delBtn = card.querySelector('.nested-delete');
-
-    // Delete button click
     delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         deleteFolder(name);
     });
 
-    // Enable swipe-to-delete for mobile
+    // Swipe-to-delete for mobile
     enableSwipeToDelete(card, name, () => {
         deleteFolder(name);
     });
 
     card.classList.add('dropzone');
-
     return card;
 }
 
@@ -638,14 +635,14 @@ function renderFolders() {
     }
 
     folders.forEach(name => {
-        const folderDiv = createFolderCard(name); // must include a .folder-contents div inside
+        const folderDiv = createFolderCard(name);
 
-        // ✅ Prevent clicks on delete/start buttons from opening the folder
         folderDiv.addEventListener('click', (e) => {
             if (e.target.closest('.nested-delete') || e.target.closest('.nested-start')) return;
 
             const contentsContainer = folderDiv.querySelector('.folder-contents');
             if (contentsContainer) {
+                contentsContainer.style.display = 'block';
                 showFolderContents(name, contentsContainer);
             }
         });
@@ -666,9 +663,8 @@ function showFolderContents(folderName, container) {
     }
 
     templates.forEach(templateName => {
-        const tpl = createTemplateCardByName(templateName); // builds card from storage key
+        const tpl = createTemplateCardByName(templateName);
 
-        // ✅ Make draggable so it can be dropped back into main grid
         tpl.draggable = true;
         tpl.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('text/plain', JSON.stringify({
@@ -678,7 +674,6 @@ function showFolderContents(folderName, container) {
             e.dataTransfer.effectAllowed = 'move';
         });
 
-        // ✅ Enable swipe-to-delete reveal
         enableSwipeToDelete(tpl, folderName, () => {
             deleteTemplateFromFolder(templateName, folderName);
             showFolderContents(folderName, container);
