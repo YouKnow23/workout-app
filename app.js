@@ -94,10 +94,13 @@ function loadTemplates() {
             loadTemplates();
             renderFolders();
         }
+        const templates = getStoredTemplates(); // existing helper in your file
+            templates.forEach(template => {
+        const card = createTemplateCard(template);
+        grid.appendChild(card);
     });
 
-
-    const templates = getStoredTemplates(); // existing helper in your file
+    });  
 
     
 
