@@ -102,9 +102,8 @@ function loadTemplates() {
     const grid = document.getElementById('templateGrid');
     grid.innerHTML = '';
 
-    // --- Drop target setup ---
     grid.addEventListener('dragover', (e) => {
-        e.preventDefault(); // allow drop
+        e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
     });
 
@@ -119,12 +118,11 @@ function loadTemplates() {
                 return;
             }
             deleteTemplateFromFolder(data.templateName, data.fromFolder);
-            loadTemplates();   // refresh main list
-            renderFolders();   // refresh folder list
+            loadTemplates();
+            renderFolders();
         }
     });
 
-    // --- Normal rendering ---
     const templates = getStoredTemplates();
     templates.forEach(template => {
         const card = createTemplateCard(template);
@@ -475,45 +473,42 @@ function enableTouchDrag(element, templateName, fromFolder = null) {
 
     // swipe to reveal delete (mobile)
 function enableSwipeToDelete(card, folderName, onDelete) {
-  let startX = 0;
-  let currentX = 0;
-  let isDragging = false;
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
 
-  card.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    isDragging = true;
-  });
-
-  card.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    currentX = e.touches[0].clientX;
-  });
-
-  card.addEventListener('touchend', () => {
-    if (!isDragging) return;
-    const diffX = currentX - startX;
-
-    if (diffX < -50) {
-      // Swipe left → show delete
-      card.classList.add('swiped');
-    } else if (diffX > 50) {
-      // Swipe right → hide delete
-      card.classList.remove('swiped');
-    }
-
-    isDragging = false;
-  });
-
-  // Delete button click
-  const delBtn = card.querySelector('.delete-btn');
-  if (delBtn) {
-    delBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (typeof onDelete === 'function') {
-        onDelete(folderName);
-      }
+    card.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDragging = true;
     });
-  }
+
+    card.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentX = e.touches[0].clientX;
+    });
+
+    card.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        const diffX = currentX - startX;
+
+        if (diffX < -50) {
+            card.classList.add('swiped');
+        } else if (diffX > 50) {
+            card.classList.remove('swiped');
+        }
+
+        isDragging = false;
+    });
+
+    const delBtn = card.querySelector('.nested-delete') || card.querySelector('.delete-btn');
+    if (delBtn) {
+        delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (typeof onDelete === 'function') {
+                onDelete(folderName);
+            }
+        });
+    }
 }
 
 function showFolderContents(folderName, container) {
