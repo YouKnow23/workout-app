@@ -196,10 +196,12 @@ function createTemplateCard(template) {
 
     // Dragstart from handle: set template name in dataTransfer and show card as drag image (if supported)
     handle.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', template.name);
-        try { e.dataTransfer.setDragImage(card, 10, 10); } catch (err) { /* ignore if unsupported */ }
-        e.dataTransfer.effectAllowed = 'move';
+    const payload = { templateName: template.name };
+    e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+    try { e.dataTransfer.setDragImage(card, 10, 10); } catch (err) {}
+    e.dataTransfer.effectAllowed = 'move';
     });
+
 
     // tap to preview (ignore clicks on actions or handle)
     card.addEventListener('click', (e) => {
