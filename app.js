@@ -124,21 +124,17 @@ function loadTemplates() {
     }
   });
 
-  // 🔹 NEW: Global drop fallback — anywhere outside a folder
+  // 🔹 Global drop fallback — anywhere outside a folder
   document.addEventListener('dragover', (e) => {
-    e.preventDefault(); // allow drop anywhere
+    e.preventDefault();
   });
 
   document.addEventListener('drop', (e) => {
     e.preventDefault();
 
     const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
-
-    if (data.fromFolder && data.templateName) {
-      // Only restore if not dropped inside another folder
-      if (!e.target.closest('.folder-card')) {
-        restoreTemplateFromFolder(data.templateName, data.fromFolder);
-      }
+    if (data.fromFolder && data.templateName && !e.target.closest('.folder-card')) {
+      restoreTemplateFromFolder(data.templateName, data.fromFolder);
     }
   });
 
@@ -150,22 +146,19 @@ function loadTemplates() {
   });
 }
 
-// Helper to avoid repeating logic
 function restoreTemplateFromFolder(templateName, folderName) {
-  // 1️⃣ Remove from folder
+  // Remove from folder
   deleteTemplateFromFolder(templateName, folderName);
 
-  // 2️⃣ Restore to saved templates
-  const templateKey = `template_${templateName}`;
-  localStorage.setItem(templateKey, JSON.stringify({
+  // Restore to saved templates
+  localStorage.setItem(`template_${templateName}`, JSON.stringify({
     name: templateName,
     exercises: [] // keep structure consistent
   }));
 
-  // 3️⃣ Refresh UI
-  loadTemplates();
+  // Refresh UI
   renderFolders();
-
+  loadTemplates();
 
   const templates = getStoredTemplates();
   templates.forEach(template => {
